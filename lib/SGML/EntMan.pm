@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: EntMan.pm,v 1.3 1996/12/02 13:05:00 ehood Exp $ %Z%
+##      %Z% $Id: EntMan.pm,v 1.4 1997/01/09 13:26:51 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -32,6 +32,8 @@
 ##---------------------------------------------------------------------------##
 
 package SGML::EntMan;
+
+use vars qw(@ISA @EXPORT $VERSION @SGML_CATALOG_FILES $PATHSEP);
 
 use Exporter ();
 @ISA = qw( Exporter );
@@ -104,7 +106,7 @@ sub read_catalog {
 ##
 sub read_catalog_handle {
     my $this  = shift;
-    my ($fh, $fname) = @_;
+    my($fh, $fname) = @_;
 
     $this->{Catalog}->read_handle($fname);
 }
@@ -196,7 +198,7 @@ sub open_system_id {
 sub get_public {
     my $this = shift;
     my $in_pubid = shift;
-    my $sysid, $base, $o;
+    my($sysid, $base, $o);
 
     BLK: {
 	## Check for public entry in Catalog
@@ -236,7 +238,7 @@ sub get_public {
 sub get_system {
     my $this = shift;
     my $in_sysid = shift;
-    my $sysid, $base, $o;
+    my($sysid, $base, $o);
 
     ($sysid, $base, $o) = $this->{Catalog}->get_system($in_sysid);
     ($sysid, $base, $o) = $EnvCat->get_system($in_sysid)
@@ -253,7 +255,7 @@ sub get_system {
 sub get_ent {
     my $this = shift;
     my $name = shift;
-    my $sysid, $base, $o;
+    my($sysid, $base, $o);
     my $isparm = $name =~ s/%//;
 
     if ($name) {
@@ -276,7 +278,7 @@ sub get_ent {
 sub get_doctype {
     my $this = shift;
     my $name = shift;
-    my $sysid, $base, $o;
+    my($sysid, $base, $o);
 
     if ($name) {
 	($sysid, $base, $o) = $this->{Catalog}->get_doctype($name);
@@ -295,8 +297,8 @@ sub get_doctype {
 sub resolve_delegate {
     my $this = shift;
     my($csysid, $cbase, $in_pubid) = @_;
-    my $sysid, $base, $o;
-    my $cat, $file;
+    my($sysid, $base, $o);
+    my($cat, $file);
 
     BLK: {
 	## Read catalog if not cached
@@ -349,9 +351,9 @@ sub _open_entity {
 	return undef;
     }
 
-    my $psysid, $pbase, $po;
-    my $ssysid, $sbase;
-    my $esysid, $ebase, $eo;
+    my($psysid, $pbase, $po);
+    my($ssysid, $sbase);
+    my($esysid, $ebase, $eo);
     my $fh = undef;
 
     ## Look up name, pubid and sysid
