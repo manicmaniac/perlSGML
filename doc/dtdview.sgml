@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtdview.sgml,v 1.2 1996/10/05 15:21:36 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtdview.sgml,v 1.4 1996/10/07 11:31:11 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -9,7 +9,7 @@
 ]>
 <html>
 <head>
-<title>dtdview 0.5.0</title>
+<title>dtdview 0.5.1</title>
 </head>
 <body>
 
@@ -51,7 +51,7 @@ the following:
 <p>The string in the "()" will contain the name of the DTD.
 </p>
 
-<p>See <a href="#usage">Usage</a> on how to invokde <code>dtdview</code>
+<p>See <a href="#usage">Usage</a> on how to invoke <code>dtdview</code>
 from your shell command-line.
 See <a href="#syntax">Command Syntax</a> on how to
 invoke <code>dtdview</code> commands.  See
@@ -465,6 +465,7 @@ loading of DTDs and catalogs.
 <!-- =================================================================== -->
 &avail;
 &author;
+
 <!-- =================================================================== -->
 <hr>
 </body>

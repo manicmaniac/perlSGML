@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtd.pl.sgml,v 1.4 1996/10/07 10:56:46 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtd.pl.sgml,v 1.5 1996/10/07 11:31:09 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -10,16 +10,17 @@
 <!ENTITY callback.note
 "<dl>
 <dt><strong>Note</strong></dt>
-<dd><p>Make sure to package qualify the callback; otherwise, the
-callback will be invoked within the scope of package <code>dtd</code>.
-</p></dd>
+
+    <dd><p>Make sure to package qualify the callback; otherwise, the
+    callback will be invoked within the scope of package <code>dtd</code>.
+    </p></dd>
 </dl>
 ">
 
 ]>
 <html>
 <head>
-<title>dtd.pl 2.3.0</title>
+<title>dtd.pl 2.4.0</title>
 </head>
 <body>
 
