@@ -1,6 +1,44 @@
 Revision History for dtd.pl
 -----------------------------
 	%Z% $RCSfile: dtd.pl.CHG,v $ %Z%
+==============================================================================
+2.4.0	(Oct 09, 1996)
+
+    Enhancements/Changes
+
+        o Tree file output changed where content model information
+	  is preserved.
+
+	o If parsing a DOCTYPE declaration, parsing willing stop at
+	  close of the DOCTYPE declaration.
+
+	o External subset reference supported in DOCTYPE declaration.
+
+	o Routines added to capture debugging and error messages.
+
+	o Ignore marked sections are now processed according
+	  to ISO 8879.
+
+	o DTDread_dtd will return a 0 status if parsing failed and
+	  1 on success.  Execution is no longer aborted.
+
+	o Routine added to obtain all elements with a given attribute.
+
+	o Duplicate DOCTYPE declarations are ignored, but a warning
+	  message is produced.
+
+	o Error and warning messages will be prefixed by "Error:"
+	  and "Warning:", respectively.
+
+    Bug Fixes
+
+	o The subset open no longer appears in $DocType if the
+	  subset open follows the document type name with no space
+	  in between.
+
+	o Duplicate parent elements are no longer returned from
+	  DTDget_parents.
+
 =============================================================================
 2.3.0	(Aug 21, 1996)
 

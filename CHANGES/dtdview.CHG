@@ -2,6 +2,15 @@ Revision History for dtdview
 -----------------------------
 	%Z% $RCSfile: dtdview.CHG,v $ %Z%
 ==============================================================================
+0.5.1	(Oct 09, 1996)
+
+    Enhancements/Changes
+
+        o Tree file output changed where content model information
+	  is preserved.
+
+
+==============================================================================
 0.5.0	(Aug 21, 1996)
 
     First public release of dtdview
