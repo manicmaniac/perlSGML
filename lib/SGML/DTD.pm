@@ -1,10 +1,11 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: DTD.pm,v 1.3 1996/11/14 13:28:21 ehood Exp $ %Z%
+##      %Z% %Y% $Id: DTD.pm,v 1.4 1996/12/02 13:06:01 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
-##      This file defines the SGML::DTD class.
+##      This file defines the SGML::DTD class.  Class is used for
+##	parsing and analyzing DTDs.
 ##---------------------------------------------------------------------------##
 ##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
 ##
@@ -34,8 +35,8 @@
 
 package SGML::DTD;
 
-## Import delimiters and keywords needed for parsing
 use SGML::Syntax qw(:Delims :Keywords);
+use SGML::EntMan;
 
 ## Derive from Exporter
 use Exporter ();
@@ -44,7 +45,7 @@ use Exporter ();
 @EXPORT = ();
 @EXPORT_OK = ();
 %EXPORT_TAGS = ();
-$VERSION = 0.01;
+$VERSION = "0.01";
 
 ##---------------------------------------------------------------------------##
 ##  Object methods
@@ -77,6 +78,7 @@ $VERSION = 0.01;
 ##	set_comment_callback    => Set SGML comment callback
 ##	set_debug_callback	=> Set debug callback
 ##	set_debug_handle 	=> Set debug filehandle
+##	set_ent_manager 	=> Set entity manager
 ##	set_err_callback 	=> Set error callback
 ##	set_err_handle  	=> Set error filehandle
 ##	set_pi_callback 	=> Set processing instruction callback
@@ -105,24 +107,23 @@ $attr_keywords = "$CDATA|$ENTITY|$ENTITIES|$ID|$IDREF|$IDREFS|$NAME|$NAMES|".
 ## Function map ##
 ##--------------##
 %Function = (
-    $ATTLIST	=>	'do_attlist',
-    $ELEMENT	=>	'do_element',
-    $ENTITY	=>	'do_entity',
-    $NOTATION	=>	'do_notation',
-    $SHORTREF	=>	'do_shortref',
-    $USEMAP	=>	'do_usemap',
+    $ATTLIST	=>	\&do_attlist,
+    $ELEMENT	=>	\&do_element,
+    $ENTITY	=>	\&do_entity,
+    $NOTATION	=>	\&do_notation,
+    $SHORTREF	=>	\&do_shortref,
+    $USEMAP	=>	\&do_usemap,
 );
 
 ##-------------------------##
 ## Miscellaneous variables ##
 ##-------------------------##
-$extentcnt	= 0;	# Used to create unique filehandles 
+$Verbose	= 0;	# Flag if generating debugging output
 
-%ExtParmEnt2SysId = (); # Map of external parameter entities to filenames.
-%ExtGenEnt2SysId = ();	# Map of general parameter entities to filenames.
-%PubId2SysId	= ();	# Map of public identifiers to filenames.
+## Entity manager
+$EntMan  	= new SGML::EntMan;
 
-$Verbose	= 0;
+## Callbacks
 $CommentCallback= '';
 $PICallback	= '';
 $DebugHandle	= \*STDERR;
@@ -136,29 +137,10 @@ $PrTreeEntry = \&pr_tree_entry;
 			# Print tree entry callback
 
 ##  Constants to determine if data read should be processed.
-$IncMS	= 1;
-$IgnMS	= 2;
+$IncMS  	= 1;
+$IgnMS  	= 2;
 
-##------------------------------------##
-## Environment/Command-line Variables ##
-##------------------------------------##
-##	@P_SGML_PATH defines a list of paths for searching for external
-##	entity references.  The user can define the environment
-##	variable P_SGML_PATH to tell the dtd libaray which paths to
-##	search.  The paths listed must be ':' (';' for MSDOS) separated.
-##
-##	Support for the SGML_SEARCH_PATH envariable included to search
-##	path.
-##
-$pathsep = $ENV{'COMSPEC'} ? ';' : ':';
-$dirsep  = $ENV{'COMSPEC'} ? '\\' : '/';
-@P_SGML_PATH = ();
-{
-    my(@a) = (split(/$pathsep/o, $ENV{'P_SGML_PATH'}),
-	      split(/$pathsep/o, $ENV{'SGML_SEARCH_PATH'}));
-    @P_SGML_PATH = grep(/\S/, @a);	# Keep only non-whitespace components 
-    push(@P_SGML_PATH, '.');
-}
+$extentcnt	= 0;	# Used to create unique filehandles 
 
 ##***************************************************************************##
 ##			       PUBLIC METHODS				     ##
@@ -178,11 +160,21 @@ sub new {
     $this->reset();
 
     ## Check if filehandle passed during construction
+
     my $fh = shift;
     my $status = 1;
     if ($fh) {
+
+	# Set entity manager if passed in during construction
+	my $entman = shift;
+	$EntMan = $entman  if $entman;
+
+	# Read DTD
 	$status = $this->read_dtd($fh);
     }
+
+    ## Return object
+
     $status ? $this : undef;
 }
 
@@ -541,94 +533,8 @@ sub read_dtd {
 ##***************************************************************************##
 
 ##---------------------------------------------------------------------------
-##	read_catalog_files() reads all catalog entry files (aka map
-##	files) specified by @files and by the SGML_CATALOG_FILES
-##	envariable.
-##
-sub read_catalog_files {
-    my $class = shift;
-    my(@files) = @_;
-
-    foreach (@files) {
-	next  unless /\S/;
-	$class->read_mapfile($_);
-    }
-    foreach (split(/$pathsep/o, $ENV{'SGML_CATALOG_FILES'})) {
-	next  unless /\S/;
-	$class->read_mapfile($_);
-    }
-}
-##---------------------------------------------------------------------------
-##	read_mapfile() opens and parse the entity map file specified
-##	by $filename.
-##
-sub read_mapfile {
-    my $class = shift;
-    my($filename) = @_;
-    my($id, $file, $tmp);
-    $tmp = 0;
-
-    ## Open file
-    if (($filename =~ /^\//) ||
-	($filename =~ /^\w:\\/)) {			# Absolute pathname
-
-	if (open(MAPFILE, $filename)) {
-	    $tmp = 1;
-	}
-
-    } else {						# Search for file
-	foreach (@P_SGML_PATH) {
-	    if (open(MAPFILE, "${_}${dirsep}$filename")) {
-		$tmp = 1;
-		last;
-	    }
-	}
-    }
-
-    if (!$tmp) {
-	&errMsg("Warning: Unable to open entity map file: $filename\n");
-	return;
-    }
-
-    while (<MAPFILE>) {
-	next if /^\s*$/ || /^\s*$como/o;	# Skip blank/comment lines
-	chomp;
-
-	## Break up line into 3 components
-	s/^\s*(\S+)\s+//;  $type = $1;	# Get type of entry
-	s/\s+(\S+)\s*$//;  $sysid = $1;	# Get system id
-	    $sysid =~ s/^['"]//;  $sysid =~ s/['"]$//;
-	    $sysid =~ s/<[^>]*>//;	# Strip FSI markup
-	$id = $_;			# Now should have id left
-	    $id =~ s/^['"]//;  $id =~ s/['"]$//;
-	&zip_wspace(\$id);		# Remove extra space
-
-	## Store mappings
-	if ($type =~ /public/i) {	# Public Id -> System Id
-	    $PubId2SysId{$id} = $sysid
-		unless defined($PubId2SysId{$id});
-
-	} elsif ($type =~ /entity/i) {	# Entity -> System Id
-	    if ($id =~ /%/) {			# Parameter entity
-		$id =~ s/%//;
-		$ExtParmEnt2SysId{$id} = $sysid
-		    unless defined($ExtParmEnt2SysId{$id});
-	    } else {				# General entity
-		$ExtGenEnt2SysId{$id} = $sysid
-		    unless defined($ExtGenEnt2SysId{$id});
-	    }
-	}
-    }
-    close(MAPFILE);
-}
-
-##---------------------------------------------------------------------------
 ##	set_comment_callback() sets the function to be called when an
 ##	SGML comment declaration is encountered.
-##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the function name
-##	      with the package name it is defined in.
 ##
 sub set_comment_callback {
     my $class = shift;
@@ -650,10 +556,6 @@ sub set_verbosity {
 ##	set_pi_callback() sets the function to be called when a
 ##	processing instruction is encountered.
 ##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the function name
-##	      with the package name it is defined in.
-##
 sub set_pi_callback {
     my $class = shift;
     $PICallback = shift;
@@ -662,10 +564,6 @@ sub set_pi_callback {
 ##---------------------------------------------------------------------------
 ##	set_tree_callback() sets the function to be called before
 ##	an entry is printed in the print_tree function.
-##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the function name
-##	      with the package name it is defined in.
 ##
 sub set_tree_callback {
     my $class = shift;
@@ -676,10 +574,6 @@ sub set_tree_callback {
 ##	set_debug_callback() sets the debug callback to call when
 ##	DTD.pm generates a debugging message.
 ##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the function name
-##	      with the package name it is defined in.
-##
 sub set_debug_callback {
     my $class = shift;
     $DebugCallback = shift;
@@ -689,22 +583,23 @@ sub set_debug_callback {
 ##	set_debug_handle() sets the debug filehandle where all
 ##	debugging messages will go.
 ##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the filehandle name
-##	      with the package name it is defined in.
-##
 sub set_debug_handle {
     my $class = shift;
     $DebugHandle = shift;
 }
 
 ##---------------------------------------------------------------------------
+##	set_ent_manager() sets the entity manager to use for resolving
+##	external entities.
+##
+sub set_ent_manager {
+    my $class = shift;
+    $EntMan = shift;
+}
+
+##---------------------------------------------------------------------------
 ##	set_err_callback() sets the error callback to call when
 ##	DTD.pm generates a error message.
-##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the function name
-##	      with the package name it is defined in.
 ##
 sub set_err_callback {
     my $class = shift;
@@ -714,10 +609,6 @@ sub set_err_callback {
 ##---------------------------------------------------------------------------
 ##	set_err_handle() sets the error filehandle where all
 ##	error messages will go.
-##
-##	Note: the function is called within the context of package dtd.
-##	      Therefore, one might have to prefix the filehandle name
-##	      with the package name it is defined in.
 ##
 sub set_err_handle {
     my $class = shift;
@@ -898,20 +789,12 @@ sub read_doctype {
 
     ##	Read external subset
     if ($include && ($extsubpubid || $extsubsysid)) {
-	my($tmp);
-
-	$tmp = &open_ext_entity(&entity_to_sys($this->{DocType},
-					       $extsubpubid))
-	    if ($extsubpubid);
-	if (!$tmp && $extsubsysid) {
-	    errMsg("Warning: Trying system identifier: $extsubsysid\n")
-		if ($extsubpubid);
-	    $tmp = &open_ext_entity($extsubsysid);
-	}
-	if ($tmp) {
+	my $dtent = $EntMan->open_doctype($this->{DocType},
+					  $extsubpubid, $extsubsysid);
+	if ($dtent) {
 	    &debugMsg("Reading $DOCTYPE external subset\n");
-	    $this->read_dtd($tmp, $include);
-	    close($tmp);
+	    $this->read_dtd($dtent, $include);
+	    close($dtent);
 	} else {
 	    errMsg("Warning: Unable to access $DOCTYPE external subset\n");
 	}
@@ -1073,10 +956,9 @@ sub find_ext_parm_ref {
     my($i, $tmp);
     while ($$line =~ /$pero/o) {
         $$line =~ s/$pero([$namechars]+)$refc?//o;
-        if (($i = $this->resolve_ext_entity_ref($1)) &&
-            ($tmp = &open_ext_entity($i))) {
-                $this->read_dtd($tmp, $include);
-                close($tmp);
+        if (defined($i = $this->resolve_ext_entity_ref($1))) {
+	    $this->read_dtd($i, $include);
+	    close($i);
         }
     }
 }
@@ -1247,7 +1129,7 @@ sub expand_entities {
     while ($$line =~ /($pero|$ero|$cro)[$namechars]+$refc?/o) {
 	$this->expand_parm_entities($line);
 	$this->expand_gen_entities($line);
-	expand_char_entities($line);
+	&expand_char_entities($line);
     };
 }
 
@@ -1291,22 +1173,25 @@ sub expand_gen_entities {
 ##
 sub resolve_ext_entity_ref {
     my $this = shift;
-    my($ent) = @_;
-    my($aa);
+    my($ent, $pubid, $sysid) = @_;
+    my $fh = undef;
 
-    EREFSW: {
-	last EREFSW if ($aa = $this->{PubParEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysParEntity}{$ent});
-	last EREFSW if ($aa = $this->{PubEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysCDEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysNDEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysSDEntity}{$ent});
-	last EREFSW if ($aa = $this->{SysSubDEntity}{$ent});
-	&errMsg("Warning: Entity referenced, but not defined: $ent\n"),
-	    return "";
+    $pubid = $this->{PubParEntity}{$ent} unless $pubid;
+    $sysid = $this->{SysParEntity}{$ent} unless $sysid;
+
+    BLK: {
+	if (not $pubid || $sysid) {
+	    &errMsg("Warning: Entity referenced, but not defined: $ent\n"),
+	    last BLK;
+	}
+	if ($EntMan) {
+	    $fh = $EntMan->open_entity("%ent", $pubid, $sysid);
+	    last BLK;
+	}
+	&errMsg("Warning: Unable to resolve entity reference: $ent\n");
     }
-    &entity_to_sys($ent, $aa);
+
+    $fh;
 }
 
 ##---------------------------------------------------------------------------
@@ -1797,52 +1682,6 @@ sub extract_elem_names {
 	@ret_a = (split(/[$seq$and$or]/o, $str));
     }
     grep($_ ne '', @ret_a);		# Strip out null items
-}
-
-##---------------------------------------------------------------------------
-##	open_ext_entity() opens the external entity file $filename.
-##
-sub open_ext_entity {
-    my($filename) = @_;
-    my($ret, $openname) = ('', '');
-    my($fname) = ('EXTENT' . $extentcnt++);
-
-    if (($filename =~ /^\//) || ($filename =~ /^\w:\\/)) {
-	if (open($fname, $filename)) {
-	    &debugMsg("Opening $filename for reading\n");
-	    $ret = $fname;
-	}
-    } else {
-	foreach (@P_SGML_PATH) {
-	    $openname = "${_}${dirsep}$filename";
-	    if (open($fname, $openname)) {
-		&debugMsg("Opening $openname for reading\n");
-		$ret = $fname;
-		last;
-	    }
-	}
-    }
-    &errMsg("Warning: Unable to open $filename\n") unless $ret;
-    $ret;
-}
-
-##---------------------------------------------------------------------------
-##	entity_to_sys() maps an external entity to a system identifier.
-##	How the map is resolved:
-##		1.  Return pub->sys id map for $id, or
-##		2.  Return external parameter entity map for $ent, or
-##		3.  Return external general entity map for $ent, or
-##		4.  Return $id, or
-##		5.  Return $ent
-##	2 and 3 should not conflict since parameter entity names should
-##	not conflict with general entity names.
-##
-sub entity_to_sys {
-    my($ent, $id) = @_;
-
-    $PubId2SysId{$id} ||
-    $ExtParmEnt2SysId{$ent} || $ExtGenEnt2SysId{$ent} ||
-    $id || $ent;
 }
 
 ##---------------------------------------------------------------------------
