@@ -1,0 +1,89 @@
+<!-- =================================================================== -->
+<!--    %Z% $Id: SGML..FSI.sgml,v 1.1 1997/09/12 20:02:54 ehood Exp $  %Z%
+  -->
+<!-- =================================================================== -->
+ 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN" [
+    <!ENTITY % perlSGML PUBLIC "-//EWH//ENTITIES perlSGML Modules//EN" >
+    %perlSGML;
+]>
+<html>
+<head>
+<title>perlSGML -- SGML::FSI</title>
+<link rev="made" href="mailto:ehood@medusa.acs.uci.edu">
+</head>
+
+
+<hr><h2><a name="Name">Name</a></h2>
+
+<p>SGML::FSI - SGML Formal System Indentifiers</p>
+
+<hr><h2><a name="Synopsis">Synopsis</a></h2>
+<pre>
+  use SGML::FSI;
+  $fh = OpenSysId($sysid, $base)
+</pre>
+
+<hr><h2><a name="Description">Description</a></h2>
+
+<p>The <strong>SGML::FSI</strong> module handles Formal System
+Indentifiers.
+</p>
+
+<hr><h2><a name="Exported Routines">Exported Routines</a></h2>
+
+<h3><a name="OpenSysId">OpenSysId</a></h3>
+
+<dl>
+
+<dt><tt>$fh = <strong>OpenSysId</strong>(<em>$sysid</em>, <em>$base</em>)</tt></dt><dd>
+
+<p><strong>OpenSysId</strong> opens a filehandle to <em>$sysid</em>.
+The <em>$base</em> argument is used if <em>$sysid</em> is a relative
+system identifier.
+</p>
+
+</dl>
+
+<hr><h2><a name="Notes">Notes</a></h2>
+
+<ul>
+
+<li>
+<p>Currently, this module does not really support FSIs.  The module
+exists to provide a stable(?) interface to resolving sysids to perl
+filehandles.  Someday, FSI support will be added as time permits and
+decent documentation exists.
+</p>
+
+</ul>
+
+<hr><h2><a name="Environment Variables">Environment Variables</a></h2>
+
+<dl>
+
+<dt><tt><strong>SGML_SEARCH_PATH</strong></tt></dt><dd>
+List of file system paths to look for system entities for relative
+system identifiers.
+
+</dl>
+
+<hr><h2><a name="See Also">See Also</a></h2>
+
+<p>
+<a href="SGML::EntMan.html"><strong>SGML::EntMan</strong></a>
+</p>
+<p>
+perl(1)
+</p>
+
+<!-- ================================================================== -->
+&avail;
+&author;
+
+<!-- ================================================================== -->
+<hr>
+<address>
+$Date: 1997/09/12 20:02:54 $ 
+</address>
+</body></html>
