@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------## ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.4 1996/10/04 16:11:13 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.5 1996/10/04 16:57:44 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -57,6 +57,7 @@
 ##	DTDset_err_callback	-- Set error callback
 ##	DTDset_err_handle	-- Set error filehandle
 ##	DTDset_pi_callback	-- Set processing instruction callback
+##	DTDset_tree_callback	-- Set callback for printing a tree entry
 ##	DTDset_verbosity 	-- Set verbosity flag
 ##  -------------------------------------------------------------------------
 ##	Note:  The above routines are defined to be part of package main.
@@ -286,9 +287,10 @@ $attr_keywords = "$CDATA|$ENTITY|$ENTITIES|$ID|$IDREF|$IDREFS|$NAME|$NAMES|".
 		# really needed and legal, but IBMIdDoc seems to require
 		# it.
 
-$PI_CALLBACK = "";	   # Callback for processing instructions.
+$PI_CALLBACK	  = "";	   # Callback for processing instructions.
 $COMMENT_CALLBACK = "";	   # Callback function for SGML comment declaration.
-$VERBOSE = 0;		   # Printout what is going on.
+$VERBOSE	  = 0;	   # Printout what is going on.
+$PrTreeEntry	  = "pr_tree_entry";
 
 ##--------------##
 ## Function map ##
@@ -866,6 +868,18 @@ sub main'DTDset_verbosity {
 ##
 sub main'DTDset_pi_callback {
     $PI_CALLBACK = shift;
+}
+
+##---------------------------------------------------------------------------
+##	DTDset_tree_callback() sets the function to be called before
+##	an entry is printed in the DTDprint_tree function.
+##
+##	Note: the function is called within the context of package dtd.
+##	      Therefore, one might have to prefix the function name
+##	      with the package name it is defined in.
+##
+sub main'DTDset_tree_callback {
+    $PrTreeEntry = $_[0] || "pr_tree_entry";
 }
 
 ##---------------------------------------------------------------------------
@@ -2119,8 +2133,8 @@ sub print_elem {
     local($i, $indent);
 
     if ($level == 1) {
-	print($TREEFILE $elem, "\n"); }
-    else {
+	print $TREEFILE sprintf("%s", &$PrTreeEntry($iselem, "$elem\n"));
+    } else {
 	$indent .= " " x $padlen[0];
 	for ($i=2; $i < $level; $i++) {
 	    $indent .= $open{$i} ? " | " : "   ";
@@ -2131,12 +2145,22 @@ sub print_elem {
 	} elsif ($elem ne "") {
 	    $indent .= " | "; 
 	}
-	print($TREEFILE $indent, $elem, "\n");
+	print $TREEFILE sprintf("%s",
+				&$PrTreeEntry($iselem, "$indent$elem\n"));
     }
 }
 
 ##---------------------------------------------------------------------------
+##	pr_tree_entry() is default print tree entry function.
+##
+sub pr_tree_entry {
+    shift;
+    @_;
+}
+
+##---------------------------------------------------------------------------
 ##	remove_dups() removes duplicate elements in *array.
+##
 sub remove_dups {
     local(*array) = shift;
     local(%dup);
