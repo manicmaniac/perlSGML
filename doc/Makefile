@@ -1,4 +1,4 @@
-# 	%Z% %Y% $Id: Makefile,v 1.2 1996/09/30 16:39:29 ehood Exp $ %Z%
+# 	%Z% %Y% $Id: Makefile,v 1.3 1996/10/07 10:12:41 ehood Exp $ %Z%
 #
 
 SGMLDOCS = \
@@ -26,7 +26,7 @@ all:
 	chmod -R a+r,a+X .
 
 dist:
-	do ( \
+	( \
 	    cd html ; \
 	    cp -p $(HTMLDOCS) $(dwrk)/src/perl/SGML/perlSGML/doc ; \
 	) ;
