@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: SOCat.pm,v 1.6 1997/01/09 13:13:58 ehood Exp $ %Z%
+##      %Z% $Id: SOCat.pm,v 1.7 1997/01/09 13:17:08 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -627,6 +627,7 @@ sub _get_next_token {
 	if ($buf =~ s/^([$quotes])//o) {
 	    my $q = $1;
 	    $islit = 1;
+	    $token = '';
 
 	    while (1) {
 		if (($q eq $lit_) ? ($buf =~ /$lit/o) :
