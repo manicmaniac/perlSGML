@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Util.pm,v 1.4 1996/12/18 11:13:14 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Util.pm,v 1.5 1996/12/23 12:48:17 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -38,10 +38,11 @@ use Exporter ();
     Routines => [
 	qw( &SGMLparse_attr_spec
 	    &SGMLattr_to_sgml
+	    &SGMLopen_lit
 	  )
     ],
 );
-$VERSION = "0.02";
+$VERSION = "0.03";
 
 Exporter::export_tags('Routines');
 
@@ -196,5 +197,34 @@ sub SGMLattr_to_sgml {
     chop $str;	# remove added space
     $str;
 }
+
+##----------------------------------------------------------------------
+##	SGMLopen_lit checks if a string has a literal that is not
+##	closed.  I.e. If there is a quote without a matching quote,
+##	the routine will return true.
+##
+##	Parameters
+##	    $	:  Scalar string to check
+##
+##	Return:
+##	    $	:  1 if open literal, else 0.
+##
+sub SGMLopen_lit {
+    my $str = $_[0];
+    my($q, $after);
+
+    while ($str =~ /([$quotes])/o) {
+	$q = $1;
+	$after = $';
+	if (($q eq $lit_ ? ($after =~ /($lit)/o) :
+			   ($after =~ /($lita)/o)) ) {
+	    $str = $';
+	} else {
+	    return 1;
+	}
+    }
+    0;
+}
+
 ##---------------------------------------------------------------------------##
 1;
