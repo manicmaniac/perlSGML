@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Parser.pm,v 1.2 1996/12/23 12:53:22 ehood Exp $  %Z%
+##      %Z% %Y% $Id: Parser.pm,v 1.3 1996/12/27 10:09:50 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -245,7 +245,7 @@ sub parse_data {
 	    $buf = $after;
     
     	    # Get rest of generic identifier
-            if ($buf =~ s/^([$namechars]*)\s*//o) {
+            if ($buf =~ s/^([$namechars]*)//o) {
 	        $gi .= $1;
 	    }
         
