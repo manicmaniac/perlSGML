@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: SOCat.pm,v 1.5 1996/11/21 10:50:42 ehood Exp $ %Z%
+##      %Z% $Id: SOCat.pm,v 1.6 1997/01/09 13:13:58 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -142,8 +142,8 @@ sub read_handle {
 
     ## We use an eval block to capture die's
     eval {
-	my $token, $islit, $i, $tmp, $override, $base;
-	my @args;
+	my($token, $islit, $i, $tmp, $override, $base);
+	my(@args);
 	my $fref = $this->{_File}[$#{$this->{_File}}];
 
 	ENTRY: while (1) {
@@ -509,7 +509,7 @@ sub get_document {
 sub get_delegate {
     my $this = shift;
     my $in_pubid = shift;
-    my $len, @pubpres;
+    my($len, @pubpres);
     my $pubpre = '';
 
     $in_pubid =~ s/\s+/ /g;

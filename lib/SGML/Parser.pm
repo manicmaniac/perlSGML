@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: Parser.pm,v 1.4 1997/01/08 13:16:15 ehood Exp $  %Z%
+##      %Z% $Id: Parser.pm,v 1.5 1997/01/09 13:12:09 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -41,7 +41,7 @@ package SGML::Parser;
 
 use Exporter ();
 @ISA = qw( Exporter );
-$VERSION = "0.02";
+$VERSION = "0.03";
 @EXPORT = ();
 @EXPORT_OK = ();
 %EXPORT_TAGS = ();
@@ -155,7 +155,7 @@ sub parse_data {
     my $buf = shift || '';	# Initial buffer (Optional)
     $this->{_ln} = shift || 0;	# Starting line number (Optional).
     
-    my $before, $after, $type, $tmp;
+    my($before, $after, $type, $tmp);
     my $m1;
     
     ## Set values for subsequent calls to _get_line()
@@ -386,7 +386,7 @@ sub _invoke_cb {
 sub _get_line {
     my $this = shift;
     my $ret = undef;
-    my $sref, $fh;
+    my($sref, $fh);
     
     if (defined($fh = $this->{_fh})) {
         $ret = <$fh>;

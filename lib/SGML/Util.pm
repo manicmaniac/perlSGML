@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Util.pm,v 1.5 1996/12/23 12:48:17 ehood Exp $  %Z%
+##      %Z% %Y% $Id: Util.pm,v 1.6 1997/01/09 13:10:38 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -42,7 +42,7 @@ use Exporter ();
 	  )
     ],
 );
-$VERSION = "0.03";
+$VERSION = "0.04";
 
 Exporter::export_tags('Routines');
 
@@ -82,8 +82,8 @@ Exporter::export_tags('Routines');
 ##
 sub SGMLparse_attr_spec {
     my $spec = shift;
-    my $str, $var, $q;
-    my (@ret) = ();
+    my($str, $var, $q);
+    my(@ret) = ();
     my $n = 0;
 
     ## Remove beginning whitespace
@@ -168,7 +168,7 @@ sub SGMLparse_attr_spec {
 sub SGMLattr_to_sgml {
     my $ref = shift;
     my $str = '';
-    my $name, $value, $q;
+    my($name, $value, $q);
 
     ## If reference to hash, change to an array
     if (ref($ref) eq 'HASH') {
