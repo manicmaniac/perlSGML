@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.4 1996/10/07 16:47:31 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.5 1996/10/07 16:57:55 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -338,7 +338,7 @@ is not specified.
 </p>
 </dd>
 
-<dt><a name="-treename"><code>-treename</code> <var>filename</var></a></dt>
+<dt><a name="-treefile"><code>-treefile</code> <var>filename</var></a></dt>
 <dd><p>Set the filename for file containing the content hierarchy
 tree(s) of the DTD to <var>filename</var>. The default name is
 "<code>DTD-TREE.html</code>". This option is only valid if
