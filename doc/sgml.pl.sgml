@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: sgml.pl.sgml,v 1.1 1996/09/30 16:37:24 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: sgml.pl.sgml,v 1.2 1996/10/07 15:42:28 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -12,12 +12,14 @@
 <title>sgml.pl 1.0.0</title>
 </head>
 <body>
+
 <!-- =================================================================== -->
 <hr>
 <h1>sgml.pl</h1>
 <p><code>sgml.pl</code> is a Perl library that parses an SGML
 document instance.
 </p>
+
 <!-- =================================================================== -->
 <hr>
 <h2><a name="usage">Usage</a></h2>
@@ -27,6 +29,7 @@ access the library routines:
 <pre>
     require "sgml.pl";
 </pre>
+
 <!-- =================================================================== -->
 <hr>
 <h2><a name="routines">Routines</a></h2>
@@ -72,8 +75,5 @@ a contiguous character data segment.
 
 <!-- =================================================================== -->
 <hr>
-<address>
-sgml.pl 0.1.0<br>
-</address>
 </body>
 </html>
