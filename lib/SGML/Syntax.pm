@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Syntax.pm,v 1.1 1996/11/14 13:27:06 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Syntax.pm,v 1.2 1996/12/04 15:47:13 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -45,7 +45,7 @@ use Exporter ();
 	    $opt $opt_ $plus $plus_ $rep $rep_
 	    $inc $inc_ $exc $exc_
 	    $quotes $lit $lit_ $lita $lita_
-	    $namechars
+	    $namechars $namestart
 	  )
     ],
 
@@ -138,8 +138,10 @@ $USEMAP		= "USEMAP";
 ##
 ## NOTE: If modifiy variables to support an alternative syntax, the
 ##	 first character of MDO and PIO must be the same.  The parsing
-##	 routines require this.  Also, MDO and PIO are assumed to be
-##	 2 characters in length.
+##	 routines for DTD.pm require this.  Also, MDO and PIO are
+##	 assumed to be 2 characters in length (I know, strange, but the
+##	 DTD parser code was written in '93 when I was still learning Perl,
+##	 and I have yet to rewrite it).
 
 $mdo	= '<!';		# Markup declaration open
 $mdo_	= '<!';
@@ -224,9 +226,13 @@ $lita_	= q/'/;
 ##---------------------##
 ## SGML misc variables ##
 ##---------------------##
-$namechars = '\w-\.';	# Regular expr repesenting characters in tag/entity
-			# names.  Changing this can effect how attribute
-			# values get stored (see do_attlist() routine).
+$namestart = 'A-Za-z';		# Regular expr repesenting characters that
+				# can start a name token.
+				# Should be used in '[]' in a regexp.
+
+$namechars = 'A-Za-z0-9\.\-';	# Regular expr repesenting characters in a
+				# name token.
+				# Should be used in '[]' in a regexp.
 
 %CharEntity = (		# Character entities
     'RE',	"\r",		# Record end
