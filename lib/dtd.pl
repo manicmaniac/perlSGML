@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.2 1996/10/01 13:47:35 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.3 1996/10/01 15:36:00 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -74,9 +74,6 @@
 ##---------------------------------------------------------------------------##
 ##  Current status of package:
 ##
-##	o <!DOCTYPE  is parsed, but external reference to file not
-##	  implemented, yet.  
-##
 ##	o Concurrent DTDs are not distinguished.
 ##
 ##	o <!ATTLIST #NOTATION is ignored.
@@ -89,7 +86,7 @@
 
 package dtd;
 
-$VERSION = "2.3.0";
+$VERSION = "2.4.0";
 
 ##***************************************************************************##
 ##			       GLOBAL VARIABLES				     ##
@@ -674,18 +671,17 @@ sub main'DTDreset {
 sub compute_parents {
     return  if $DidParents;
 
-    local($elem, %exc);
+    local($elem, %exc, @array);
 
     foreach $elem (&'DTDget_elements()) {
         foreach (&extract_elem_names($ElemExc{$elem})) { $exc{$_} = 1; }
-	foreach (&extract_elem_names($ElemCont{$elem})) {
+	@array = (&extract_elem_names($ElemCont{$elem}),
+		  &extract_elem_names($ElemInc{$elem}));
+	&remove_dups(*array);
+	foreach (@array) {
 	    $Parents{$_} .= ($Parents{$_} ? ' ' : '') . $elem
 		unless $exc{$_} || !&'DTDis_element($_);
 	}
-        foreach (&extract_elem_names($ElemInc{$elem})) {
-            $Parents{$_} .= ($Parents{$_} ? ' ' : '') . $elem
-                unless $exc{$_} || !&'DTDis_element($_);
-        }
         %exc = ();
     }
     foreach (keys %ElemCont) {
@@ -729,9 +725,12 @@ sub main'DTDread_dtd {
 
     ## Eval main loop to catch fatal errors
     eval q{
+      DTDBLK: {
 	$include = $IncMS unless $include;
-	return if $include == $IgnMS;		# Do nothing if ignoring
-	while (!eof($handle)) {
+	if ($include == $IgnMS) {		# Do nothing if ignoring
+	    last DTDBLK;
+	}
+	DTDPARSELOOP: while (!eof($handle)) {
 	    $/ = $mdo1char;
 	    $line = <$handle>;              	# Read 'til first declaration
 	    &find_ext_parm_ref(*line, $include)	# Read any external files
@@ -739,14 +738,16 @@ sub main'DTDread_dtd {
 	    last if eof($handle);           	# Exit if EOF
 	    $c = getc($handle);
 	    if ($c eq $mdo2char) {
+		last DTDPARSELOOP  unless
 		&read_declaration($handle, $include);	# Read declaration
 	    } elsif ($c eq $pio2char) {
 		&read_procinst($handle, $include);	# Read processing inst.
 	    } else {
-		&errMsg("Unrecognized markup: $line$c\n");
+		&errMsg("Error: Unrecognized markup: $line$c\n");
 		die;
 	    }
 	}
+      }
     }; # end eval
 
     select($old);				# Reset default filehandle
@@ -799,7 +800,7 @@ sub main'DTDread_mapfile {
     }
 
     if (!$tmp) {
-	&errMsg("Unable to open entity map file: $filename\n");
+	&errMsg("Warning: Unable to open entity map file: $filename\n");
 	return;
     }
 
@@ -922,8 +923,9 @@ sub main'DTDset_err_handle {
                             ##---------------##
 
 ##---------------------------------------------------------------------------
-##	read_declaration() parses a declaration.  $include determines
-##	if the declaration is to be included or ignored.
+##	read_declaration() parses a declaration.  A return of 0 signifies
+##	that parsing of DTD should terminate (ie. DOCTYPE declaration
+##	parsed).
 ##
 sub read_declaration {
     local($handle, $include) = @_;
@@ -932,10 +934,14 @@ sub read_declaration {
     $line = '';
 
     $c = getc($handle);
-    &read_comment($handle), return		# Comment declaration
-	if $c eq $comchar;
-    &read_msection($handle, $include), return	# Marked section
-	if $c eq $dso_;
+    if ($c eq $comchar) {			# Comment declaration
+	&read_comment($handle);
+	return 1;
+    }
+    if ($c eq $dso_) {				# Marked section
+	&read_msection($handle, $include);
+	return 1;
+    }
 
     $func = $c;
     while ($c !~ /^\s*$/) {     # Get declaration type
@@ -944,10 +950,15 @@ sub read_declaration {
     }
     chop $func;
     $func =~ tr/a-z/A-Z/;	# Translate declaration type to uppercase
-    &read_doctype($handle, $include), return	# DOCTYPE declaration
-	if $func =~ /^\s*$DOCTYPE\s*$/oi;
-    &read_linktype($handle, $include), return	# LINKTYPE declaration
-	if $func =~ /^\s*$LINKTYPE\s*$/oi;
+
+    if ($func =~ /^\s*$DOCTYPE\s*$/oi) {	# DOCTYPE declaration
+	&read_doctype($handle, $include);
+	return 0;
+    }
+    if ($func =~ /^\s*$LINKTYPE\s*$/oi) {	# LINKTYPE declaration
+	&read_linktype($handle, $include);
+	return 1;
+    }
 
     while ($c ne $mdc) {		# Get rest of declaration
         $c = getc($handle);		    # Get next character
@@ -976,6 +987,7 @@ sub read_declaration {
 	&$tmp(*line) if $tmp;		    # Interpret declaration
     }
     $/ = $d;				# Reset slurp var
+    1;
 }
 
 ##---------------------------------------------------------------------------
@@ -1029,29 +1041,66 @@ sub read_comment {
 }
 
 ##---------------------------------------------------------------------------
-##	read_doctype() parses a DOCTYPE declaration.  $include determines
-##	if the declaration is to be included or ignored.
+##	read_doctype() parses a DOCTYPE declaration.
 ##
 sub read_doctype {
     local($handle, $include) = @_;
-    local($line, $dt);
+    local($line, $dt, $tok, $tok2, $extsubhandle);
+    local($extsubpubid, $extsubsysid) = ('', '');
     local($d) = $/;
 
     ##	Should be processing one DOCTYPE at most.
     if ($DocType && $include) {
-	&errMsg("A second DOCTYPE declaration exists\n");
-	die;
+	&errMsg("Warning: Extra DOCTYPE declaration ignored\n");
     }
 
+    ##	Get text before DSO
+    $line = '';
     $/ = $dso_;
-    $line = <$handle>;                  # Get text before $dso
-    $line =~ s/${dso}$//;		# Strip dso
-    &debugMsg("$DOCTYPE $line\n");
-    if ($include) {
-	$dt = &get_next_group(*line);	# Get doctype name
-	($DocType = $dt) =~ tr/a-z/A-Z/;
+    while (!eof($handle)) {
+	$line .= <$handle>;
+	last if &notin_lit($line);
     }
+    $line =~ s/${dso}$//o;		# Strip DSO
+    &debugMsg("$DOCTYPE $line\n");
+
+    ##  Get doctype name
+    if ($include) {
+	$dt = &get_next_group(*line);
+	($DocType = $dt) =~ tr/a-z/A-Z/  unless $DocType;
+
+	##  Check for external identifier
+	if ($tok = &get_next_group(*line)) {
+	    if ($tok =~ /$PUBLIC/o) {
+		$extsubpubid = &get_next_group(*line);
+	    }
+	    $extsubsysid = &get_next_group(*line);
+	}
+    }
+
+    ##	Read local subset
     &read_subset($handle, $include, $dsc_.$mdc_);
+
+    ##	Read external subset
+    if ($include && ($extsubpubid || $extsubsysid)) {
+	local($tmp);
+
+	$tmp = &open_ext_entity(&entity_to_sys($DocType, $extsubpubid))
+	    if ($extsubpubid);
+	if (!$tmp && $extsubsysid) {
+	    errMsg("Warning: Trying system identifier: $extsubsysid\n")
+		if ($extsubpubid);
+	    $tmp = &open_ext_entity($extsubsysid);
+	}
+	if ($tmp) {
+	    &debugMsg("Reading $DOCTYPE external subset\n");
+	    &'DTDread_dtd($tmp, $include);
+	    close($tmp);
+	} else {
+	    errMsg("Warning: Unable to access $DOCTYPE external subset\n");
+	}
+    }
+
     &debugMsg("Finished $DOCTYPE\n");
     $/ = $d;				# Reset slurp var
 }
@@ -1068,7 +1117,7 @@ sub read_linktype {
     $/ = $dso_;
     $line = <$handle>;                  # Get text before $dso
     &expand_entities(*line);
-    &errMsg("$LINKTYPE declaration ignored\n");
+    &errMsg("Warning: $LINKTYPE declaration ignored\n");
     &read_subset($handle, $IgnMS, $dsc_.$mdc_);
     $/ = $d;				# Reset slurp var
 }
@@ -1216,7 +1265,7 @@ sub find_ext_parm_ref {
 ##
 sub subset_error {
     local($c, $hint) = @_;
-    &errMsg("Syntax error in subset.\n",
+    &errMsg("Error: Syntax error in subset.\n",
 	    qq|\tUnexpected character: "$c", ascii code=|, ord($c), ".\n",
 	    ($hint ? "    Reason:\n\t$hint\n" : "\n"));
     die;
@@ -1231,7 +1280,7 @@ sub do_attlist {
     &expand_entities(*line);
     $tmp = &get_next_group(*line);	 	# Get element name(s)
     if ($tmp =~ /^\s*$rni$NOTATION\s*$/io) {	# Check for #NOTATION
-	&errMsg("$ATTLIST $rni$NOTATION skipped\n");
+	&errMsg("Warning: $ATTLIST $rni$NOTATION skipped\n");
 	return;
     }
     &debugMsg("$ATTLIST: $tmp\n");
@@ -1321,7 +1370,7 @@ sub do_element {
 
     foreach (@names) {			# Store element information
 	if (defined($ElemCont{$_})) {
-	    &errMsg("Duplicate element declaration: $_\n");
+	    &errMsg("Warning: Duplicate element declaration: $_\n");
 	} else {
 	    $ElemCont{$_} = $elcont;
 	    $ElemInc{$_} = $elinc;
@@ -1361,13 +1410,13 @@ sub do_notation {
 ##---------------------------------------------------------------------------
 sub do_shortref {
     local(*line) = @_;
-    &errMsg("$SHORTREF declaration ignored\n");
+    &errMsg("Warning: $SHORTREF declaration ignored\n");
 }
 
 ##---------------------------------------------------------------------------
 sub do_usemap {
     local(*line) = @_;
-    &errMsg("$USEMAP declaration ignored\n");
+    &errMsg("Warning: $USEMAP declaration ignored\n");
 }
 
 ##---------------------------------------------------------------------------
@@ -1402,7 +1451,7 @@ sub expand_parm_entities {
     local(*line) = @_;
 
     while ($line =~ s/$pero([$namechars]+)$refc?/$ParEntity{$1}/) {
-	&errMsg(qq|Parameter entity "$1" not defined.  |,
+	&errMsg(qq|Warning: Parameter entity "$1" not defined.  |,
 	        qq|May cause parsing errors.\n|)
 	    unless defined($ParEntity{$1});
 	&del_comments(*line);
@@ -1417,7 +1466,8 @@ sub expand_gen_entities {
     local(*line) = @_;
 
     while ($line =~ s/$ero([$namechars]+)$refc?/$_AGE{$1}/) {
-	&errMsg(qq|Entity "$1" not defined.  May cause parsing errors.\n|)
+	&errMsg(qq|Warning: Entity "$1" not defined.  |,
+		qq|May cause parsing errors.\n|)
 	    unless defined($_AGE{$1});
 	&del_comments(*line);
     }
@@ -1431,7 +1481,7 @@ sub expand_char_entities {
     local(*line) = @_;
 
     while ($line =~ s/$cro([$namechars]+)$refc?/$CharEntity{$1}/) {
-	&errMsg(qq|Character entity "$1" not recognized.  |,
+	&errMsg(qq|Warning: Character entity "$1" not recognized.  |,
 	        qq|May cause parsing errors.\n|)
 	    unless defined($CharEntity{$1});
     }
@@ -1487,7 +1537,7 @@ sub open_ext_entity {
 	    }
 	}
     }
-    &errMsg("Unable to open $filename\n") unless $ret;
+    &errMsg("Warning: Unable to open $filename\n") unless $ret;
     $ret;
 }
 
@@ -1510,7 +1560,8 @@ sub resolve_ext_entity_ref {
 	last EREFSW if ($aa = $SysNDEntity{$ent});
 	last EREFSW if ($aa = $SysSDEntity{$ent});
 	last EREFSW if ($aa = $SysSubDEntity{$ent});
-	&errMsg("Entity referenced, but not defined: $ent\n"), return "";
+	&errMsg("Warning: Entity referenced, but not defined: $ent\n"),
+	    return "";
     }
     &entity_to_sys($ent, $aa);
 }
@@ -1657,12 +1708,12 @@ sub do_ge_sdata {
 
 sub do_ge_public {
     local($name, *line) = @_;
-    &errMsg("General $PUBLIC entity skipped\n");
+    &errMsg("Warning: General $PUBLIC entity skipped\n");
 }
 
 sub do_ge_system {
     local($name, *line) = @_;
-    &errMsg("General $SYSTEM entity skipped\n");
+    &errMsg("Warning: General $SYSTEM entity skipped\n");
 }
 
 ##---------------------------------------------------------------------------
@@ -1711,8 +1762,9 @@ sub get_next_group {
 	$line =~ s/^\s*//;
     } elsif ($line =~ /^[$quotes]/o) {
 	$ret = &get_next_string(*line);
-    } else {
-	$line =~ s/^(\S+)\s*//; $ret = $1;
+    } elsif ($line =~ /\S/) {
+	$line =~ s/^(\S+)\s*//;
+	$ret = $1;
     }
     &zip_wspace(*ret);
     $ret;
@@ -1746,10 +1798,11 @@ sub is_quote_char {
 ##
 sub debugMsg {
     if ($VERBOSE) {
+	local(@dlist) = ("Debug: ", @_);
 	if (defined(&$DebugCallback)) {
-	    &$DebugCallback(@_);
+	    &$DebugCallback(@dlist);
 	} else {
-	    print($DebugHandle  @_);
+	    print($DebugHandle  @dlist);
 	}
     }
 }
@@ -1764,6 +1817,27 @@ sub errMsg {
     } else {
 	print($ErrHandle  @_);
     }
+}
+
+##----------------------------------------------------------------------
+##      notin_lit() checks if string has a literal that is open.
+##      The function returns 1 if it is not. Else it returns 0.
+##
+sub notin_lit {
+    local($str) = ($_[0]);
+    local($q, $after);
+ 
+    while ($str =~ /([${lit}${lita}])/o) {
+        $q = $1;
+        $after = $';
+        if (($q eq $lit ? ($after =~ /($lit)/o) :
+                          ($after =~ /($lita)/o)) ) {
+            $str = $';
+        } else {
+            return 0;
+        }
+    }
+    1;
 }
 
 ##---------------------------------------------------------------------------
