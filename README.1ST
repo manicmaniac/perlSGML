@@ -1,5 +1,5 @@
 README for perlSGML
-    $Date: 1997/09/17 16:37:20 $ 
+    $Date: 1997/09/18 14:52:07 $ 
 ---------------------------------------------------------------------------
     Copyright (C) 1994-1997  Earl Hood, ehood@medusa.acs.uci.edu
 
@@ -39,7 +39,7 @@ old/		Old versions of programs
 sgm/      	Sample SGML files (mostly DTDs)
 stripsgml* 	Strip tags from an SGML document instance.
 
-* denotes programs
+*Denotes programs
 
 ---------------------------------------------------------------------------
 INSTALLATION
@@ -153,8 +153,10 @@ BUGS/COMMENTS/SUGGESTIONS?
     your message:
 
         o  Version of Perl (can be retrievied by "perl -v").
-        o  Version of the program in question.
-        o  The exact command-line used to invoke the program.
+        o  Version of the program/library/module in question
+	   (See VERSIONS for a software version listing).
+        o  The exact command-line used to invoke the program (if
+	   applicable).
         o  Error/diagnostic messages from the program.
         o  Any other information that might prove useful.
 
@@ -162,5 +164,5 @@ BUGS/COMMENTS/SUGGESTIONS?
     have an answer to your question/problem.
 
 ---------------------------------------------------------------------------
-$Date: 1997/09/17 16:37:20 $ 
+$Date: 1997/09/18 14:52:07 $ 
 Earl Hood, ehood@medusa.acs.uci.edu

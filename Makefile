@@ -1,4 +1,4 @@
-##	%Z% $Id: Makefile,v 1.2 1997/09/16 15:48:47 ehood Exp $  %Z%
+##	%Z% $Id: Makefile,v 1.3 1997/09/18 14:52:07 ehood Exp $  %Z%
 
 ###########################################
 # MAKEFILE VARIABLES
@@ -48,6 +48,9 @@ SUBDIRS		= \
 default: progs make_subdirs
 
 depend:
+
+install:
+	$(PERL) install.me
 
 progs:
 	$(CHMOD) a+x $(PROGS)
