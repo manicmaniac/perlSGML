@@ -1,4 +1,4 @@
-<!--	%Z% %Y% $Id: tree.mod,v 1.2 1996/10/06 18:47:13 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: tree.mod,v 1.3 1996/10/06 18:51:38 ehood Exp $ %Z%
   -->
 
 <p>The tree shows the overall content hierarchy for an element.
@@ -77,12 +77,12 @@ of reference to see the content hierarchy of the element.
 hierachy of an element as defined by the DTD without concern of where
 it may occur in the overall structure. The {} lines give additional
 information regarding the element with respect to its existance
-within a specific context. For example, when an <code>ACRO</code> element occurs
-within <code>D1</code>,<code>HEAD</code>, along with its normal
-content, it can contain <code>IDX</code> and <code>NEWLINE</code>
+within a specific context. For example, when an <code>ACRO</code>
+element occurs within <code>D1,HEAD</code> -- along with its normal
+content -- it can contain <code>IDX</code> and <code>NEWLINE</code>
 elements due to inclusions from ancestors. However, it cannot contain
-<code>NEEDBEGIN</code> and <code>NEEDEND</code> regardless of its defined
-content since an ancestor(s) excludes them.
+<code>NEEDBEGIN</code> and <code>NEEDEND</code> regardless of its
+defined content since an ancestor(s) excludes them.
 
 </p>
 
@@ -90,9 +90,10 @@ content since an ancestor(s) excludes them.
 <dt><strong>Note</strong></dt>
 <dd>Exclusions override inclusions. If an element occurs in an
 inclusion set and an exclusion set, the exclusion takes
-precedence. Therefore, in the above example, <code>needbegin</code>, 
-<code>needend</code> are excluded from <code>acro</code>.</dd>
+precedence. Therefore, in the above example, <code>NEEDBEGIN</code>, 
+<code>NEEDEND</code> are excluded from <code>ACRO</code>.</dd>
 </dl>
+
 <p>Explanation of {}'s keys:
 </p>
 <dl>
