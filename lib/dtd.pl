@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------## ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.5 1996/10/04 16:57:44 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.6 1996/11/12 14:40:37 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -230,7 +230,9 @@ $exc_	= '-';
 
 $quotes	= q/'"/;	# Quote characters
 $lit	= q/"/;
+$lit_	= q/"/;
 $lita	= q/'/;
+$lita_	= q/'/;
 
 ##---------------------##
 ## SGML misc variables ##
@@ -725,7 +727,7 @@ sub main'DTDread_dtd {
     local($old) = select($handle);
 
     ## Eval main loop to catch fatal errors
-    eval q{
+    eval q%
       DTDBLK: {
 	$include = $IncMS unless $include;
 	if ($include == $IgnMS) {		# Do nothing if ignoring
@@ -749,7 +751,7 @@ sub main'DTDread_dtd {
 	    }
 	}
       }
-    }; # end eval
+    %; # end eval
 
     select($old);				# Reset default filehandle
     $/ = $oldslash;				# Reset $/
@@ -1101,7 +1103,7 @@ sub read_doctype {
 	$tmp = &open_ext_entity(&entity_to_sys($DocType, $extsubpubid))
 	    if ($extsubpubid);
 	if (!$tmp && $extsubsysid) {
-	    errMsg("Warning: Trying system identifier: $extsubsysid\n")
+	    &errMsg("Warning: Trying system identifier: $extsubsysid\n")
 		if ($extsubpubid);
 	    $tmp = &open_ext_entity($extsubsysid);
 	}
@@ -1110,7 +1112,7 @@ sub read_doctype {
 	    &'DTDread_dtd($tmp, $include);
 	    close($tmp);
 	} else {
-	    errMsg("Warning: Unable to access $DOCTYPE external subset\n");
+	    &errMsg("Warning: Unable to access $DOCTYPE external subset\n");
 	}
     }
 
@@ -1791,8 +1793,13 @@ sub get_next_string {
     local(*line) = @_;
     local($ret, $q);
 
-    $line =~ s/^\s*([$quotes])//o; $q = $1;
-    $line =~ s/^([^$q]*)$q\s*//; $ret = $1;
+    $line =~ s/^\s*([$quotes])//o;
+    $q = $1;
+    if ($q eq $lit_) {
+        $line =~ s/^([^$lit]*)$lit\s*//o;  $ret = $1;
+    } else {
+        $line =~ s/^([^$lita]*)$lita\s*//o;  $ret = $1;
+    }
     &zip_wspace(*ret);
     $ret;
 }
