@@ -2,7 +2,11 @@ Revision History for dtd.pl
 -----------------------------
 	%Z% $RCSfile: dtd.pl.CHG,v $ %Z%
 ==============================================================================
-2.4.1	(Dec 05, 1996)
+2.4.1	(Dec 26, 1996)
+
+    Enhancements/Changes
+
+	o Literal parsing code modified to improve performance.
 
     Bug Fixes
 
@@ -10,6 +14,8 @@ Revision History for dtd.pl
 	  legal under Perl 5.
 
 	o Forward slashes are recognized within MS-DOS pathanmes.
+
+	o ElemsOfAttr hash contains proper values.
 
 ==============================================================================
 2.4.0	(Oct 09, 1996)
