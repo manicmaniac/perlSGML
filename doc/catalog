@@ -1,0 +1,8 @@
+	-- %Z% %Y% $Id: catalog,v 1.1 1996/09/30 16:37:22 ehood Exp $ %Z% --
+
+PUBLIC "-//EWH//ENTITIES perlSGML Modules//EN"	 "<osfile>ent/perlSGML.ent"
+PUBLIC "-//EWH//TEXT Author (HTML)//EN"		 "<osfile>mod/author.mod"
+PUBLIC "-//EWH//TEXT Availability (HTML)//EN"	 "<osfile>mod/avail.mod"
+PUBLIC "-//EWH//TEXT Catalog Description (HTML)//EN" "<osfile>mod/catalog.mod"
+PUBLIC "-//EWH//TEXT Catalog CL Option (HTML)//EN" "<osfile>mod/catopt.mod"
+

@@ -1,0 +1,57 @@
+<!-- =================================================================== -->
+<!--	%Z% %Y% $Id: stripsgml.sgml,v 1.1 1996/09/30 16:37:24 ehood Exp $ %Z%
+  -->
+<!-- =================================================================== -->
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN" [
+    <!ENTITY % perlSGML PUBLIC "-//EWH//ENTITIES perlSGML Modules//EN" >
+    %perlSGML;
+]>
+<html>
+<head>
+<title>stripsgml 0.1.1</title>
+</head>
+<body>
+<!-- =================================================================== -->
+<hr>
+<h1>stripsgml</h1>
+<p>Remove SGML markup.
+</p>
+<!-- =================================================================== -->
+<hr>
+<h2><a name="description">Description</a></h2>
+<p><code>stripsgml</code> removes SGML markup tags from a file.
+<code>stripsgml</code> also
+attempts to translate standard character entity references to ASCII.
+</p>
+<p><code>stripsgml</code> is not very smart, and is intented for
+simple SGML document instances.
+</p>
+<!-- =================================================================== -->
+<hr>
+<h2><a name="usage">Usage</a></h2>
+<p><code>stripsgml</code> is invoked from the Unix shell as follows:
+</p>
+<p><tt>% stripsgml </tt><var>[options]</var><tt> &lt;
+</tt><var>sgmlfile</var><tt> &gt; </tt><var>asciifile</var>
+</p>
+<p>The following are the list of options available:
+</p>
+<dl>
+<dt><a name="-html"><code>-html</code></a></dt>
+<dd><p>Cause URLs in anchor elements in an HTML document to be
+preserved in the output.</p>
+</dd>
+</dl>
+
+<!-- =================================================================== -->
+&avail;
+&author;
+
+<!-- =================================================================== -->
+<hr>
+<address>
+stripsgml 0.1.1<br>
+</address>
+</body>
+</html>

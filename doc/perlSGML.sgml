@@ -1,0 +1,52 @@
+<!-- =================================================================== -->
+<!--	%Z% %Y% $Id: perlSGML.sgml,v 1.1 1996/09/30 16:37:24 ehood Exp $ %Z%
+  -->
+<!-- =================================================================== -->
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN" [
+    <!ENTITY % perlSGML PUBLIC "-//EWH//ENTITIES perlSGML Modules//EN" >
+    %perlSGML;
+]>
+<html>
+<head>
+<title>perlSGML</title>
+</head>
+
+<body>
+
+<!-- =================================================================== -->
+<h1>perlSGML</h1>
+
+<address>
+dtd.pl, dtd2html, dtddiff, dtdtree, dtdview, sgml.pl, stripsgml
+</address>
+
+<p><em>perlSGML</em> is a collection of Perl programs and libraries
+for processing SGML documents.  The following software is available
+in the <em>perlSGML</em> distribution:
+</p>
+
+<ul>
+<li><a name="dtd.pl" href="dtd_pl.html">dtd.pl</a> 2.3.0</li>
+<li><a name="dtd2html" href="dtd2html.html">dtd2html</a> 1.5.0</li>
+<li><a name="dtddiff" href="dtddiff.html">dtddiff</a> 1.2.0</li>
+<li><a name="dtdtree" href="dtdtree.html">dtdtree</a> 1.3.0</li>
+<li><a name="dtdview" href="dtdview.html">dtdview</a> 0.5.0</li>
+<li><a name="sgml.pl" href="sgml_pl.html">sgml.pl</a> 0.1.0</li>
+<li><a name="stripsgml" href="stripsgml.html">stripsgml</a> 0.1.1</li>
+</ul>
+
+<!-- =================================================================== -->
+<hr>
+<h2>Availability</h2>
+<p>For the latest information on <em>perlSGML</em> and its availability,
+see &lt;URL:<a href="http://www.oac.uci.edu/indiv/ehood/perlSGML.html"
+>http://www.oac.uci.edu/indiv/ehood/perlSGML.html</a>&gt;
+</p>
+
+<!-- =================================================================== -->
+&author;
+<!-- =================================================================== -->
+<hr>
+</body>
+</html>
