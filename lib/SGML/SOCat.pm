@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: SOCat.pm,v 1.2 1996/11/14 09:31:18 ehood Exp $ %Z%
+##      %Z% %Y% $Id: SOCat.pm,v 1.3 1996/11/19 13:56:36 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -22,51 +22,69 @@
 ##  along with this program; if not, write to the Free Software
 ##  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ##---------------------------------------------------------------------------##
+##  Usage:
+##	The following is an example of how to use this class:
+##
+##	    use SGML::SOCat;
+##
+##	    $catalog = new SOCat;
+##	    $catalog->read_file("catalog");
+##	    $catalog->read_handle(\*STDIN);
+##	    # ...
+##
+##	The read_file and read_handle methods will return 1 if parsing
+##	succeeded.  Else they return 0.
+##
+##	The total maximun number of errors allowed while parsing is
+##	set by the $SGML::SOCat::MaxErrs variable.  The default value
+##	is 10.
+##---------------------------------------------------------------------------##
 
 package SGML::SOCat;
 
 use Exporter ();
 @EXPORT = ();
-$VERSION = 0.01;
+$VERSION = "0.01";
 
-BEGIN {
+$MaxErrs= 10;		# Max number of errors before aborting
 
-    # @SGML_SEARCH_PATH = ();	# List of paths to find sysids
-    $MaxErrs	= 10;		# Max number of errors before aborting
+$com	= q/--/;	# Comment delimiter
+$lit	= q/"/;		# Literal delimiter
+$lit_	= q/"/;
+$lita	= q/'/;		# Literal (alternate) delimiter
+$lita_	= q/'/;
+$quotes	= q/"'/;	# All literal delimiters
 
-    $com	= q/--/;	# Comment delimiter
-    $lit	= q/"/;		# Literal delimiter
-    $lit_	= q/"/;
-    $lita	= q/'/;		# Literal (alternate) delimiter
-    $lita_	= q/'/;
-    $quotes	= q/"'/;	# All literal delimiters
+$_hcnt	= 0;		# Filehandle count
 
-    $_hcnt	= 0;		# Filehandle count
+%_name_sysid_entries = (
 
-    %_name_sysid_entries = (
-	'PUBLIC'  	=> 2,
-	'ENTITY'  	=> 2,
-	'ENTITY%' 	=> 2,
-	'DOCTYPE' 	=> 2,
-	'LINKTYPE'	=> 2,
-	'NOTATION'	=> 2,
-	'SYSTEM'	=> 2,
-	'DELEGATE'	=> 2,
-    );
-    %_scalar_entries = (
-	'SGMLDECL'	=> 1,
-	'DOCUMENT'	=> 1,
-	'BASE'     	=> 1,
-    );
+    'DELEGATE'	=> { argc => 2, argt => [1,0] },
+    'DOCTYPE' 	=> { argc => 2, argt => [0,0] },
+    'DTDDECL'	=> { argc => 2, argt => [1,0] },
+    'ENTITY%' 	=> { argc => 2, argt => [0,0] },
+    'ENTITY'  	=> { argc => 2, argt => [0,0] },
+    'LINKTYPE'	=> { argc => 2, argt => [0,0] },
+    'NOTATION'	=> { argc => 2, argt => [0,0] },
+    'PUBLIC'  	=> { argc => 2, argt => [1,0] },
+    'SYSTEM'	=> { argc => 2, argt => [0,0] },
 
-    %Entries	= (		# Legal catalog entries
-	%_name_sysid_entries,
-	%_scalar_entries,
-	'CATALOG' 	=> 1,
-	'OVERRIDE'	=> 1,
-    );
+);
+%_scalar_entries = (
 
-}
+    'DOCUMENT'	=> { argc => 1, argt => [0] },
+    'SGMLDECL'	=> { argc => 1, argt => [0] },
+
+);
+%Entries	= (		# Legal catalog entries
+    %_name_sysid_entries,
+    %_scalar_entries,
+
+    'BASE'     	=> { argc => 1, argt => [0] },
+    'CATALOG' 	=> { argc => 1, argt => [0] },
+    'OVERRIDE'	=> { argc => 1, argt => [0] },
+
+);
 
 ##**********************************************************************##
 ##	PUBLIC METHODS
@@ -84,20 +102,28 @@ sub new {
 }
 
 ##----------------------------------------------------------------------
-sub read_catalog {
+##	read_file() reads the catalog designated by the filename
+##	passed in.  A 1 is returned on success, and a 0 on failure.
+##
+sub read_file {
     my $this = shift;
     my $fname = shift;
     my $handle = "CAT" . $_hcnt++;
 
     if (open($handle, $fname)) {
-	$this->read_catalog_handle(\*$handle, $fname);
+	$this->read_handle(\*$handle, $fname);
     } else {
 	$this->_errMsg("Unable to open $fname");
     }
 }
 
 ##----------------------------------------------------------------------
-sub read_catalog_handle {
+##	read_hadnle() reads the catalog designated by the filehandle
+##	passed in.  A 1 is returned on success, and a 0 on failure.
+##	A reference to a filehandle should passed in to avoid problems
+##	with package scoping.
+##
+sub read_handle {
     my $this  = shift;
     my ($fh, $fname) = @_;
 
@@ -107,13 +133,14 @@ sub read_catalog_handle {
 			      _buf => undef,
 			      _line_num => 0,
 			      _override => 0,
+			      _base => '',
 			      _errcnt => 0,
 			      _peek => [ ],
 			    } );
 
     ## We use an eval block to capture die's
     eval {
-	my $token, $islit, $i, $tmp, $override;
+	my $token, $islit, $i, $tmp, $override, $base;
 	my @args;
 	my $fref = $this->{_File}[$#{$this->{_File}}];
 
@@ -150,28 +177,51 @@ sub read_catalog_handle {
 
 	    ## Get arguments for entry
 	    @args = ();
-	    for ($i = 0; $i < $Entries{$token}; $i++) {
+	    for ($i = 0; $i < $Entries{$token}{argc}; $i++) {
 		if (!defined($tmp = ($this->_get_next_token())[0])) {
 		    $this->_errMsg("Unexpected EOF");
 		    last ENTRY;
+		}
+		## Compress whitespace if required
+		if ($Entries{$token}{argt}[$i]) {
+		    $tmp =~ s/\s+/ /g;
 		}
 		push(@args, $tmp);
 	    }
 
 	    ## Store entry information
 	    $override = $fref->{_override};
+	    $base = $fref->{_base};
 	    SW: {
 		if (defined($_name_sysid_entries{$token})) {
 		    $tmp = ($args[0] =~ '%') ? 'ENTITY%' : $token;
-		    $this->{$tmp}{$args[0]} = {
-			sysid => $args[1],
-			override => $override,
-		    }  unless defined($this->{$tmp}{$args[0]});
+
+		    # Only store entry if not already defined
+		    if (!defined($this->{$tmp}{$args[0]})) {
+			$this->{$tmp}{$args[0]} = {
+			    sysid => $args[1],
+			    override => $override,
+			    base => $base,
+			};
+
+			# Check if DELEGATE and store size of pubid
+			# prefix
+			if ($tmp eq 'DELEGATE') {
+			    push(@{$this->{_DelSizes}{length($args[0])}},
+				 $args[0]);
+			}
+		    }
 		    last SW;
 		}
 		if (defined($_scalar_entries{$token})) {
-		    $this->{$token} = $args[0]
-			unless defined $this->{$token};
+		    $this->{$token} = {
+			sysid => $args[0],
+			base => $base,
+		    } unless defined $this->{$token};
+		    last SW;
+		}
+		if ($token eq 'BASE') {
+		    $fref->{_base} = $args[0];
 		    last SW;
 		}
 		if ($token eq 'OVERRIDE') {
@@ -179,7 +229,7 @@ sub read_catalog_handle {
 		    last SW;
 		}
 		if ($token eq 'CATALOG') {
-		    $this->read_catalog($args[0]);
+		    $this->read_file($args[0]);
 		    last SW;
 		}
 		$this->_errMsg("Internal Error\n");
@@ -197,6 +247,189 @@ sub read_catalog_handle {
 
     ## Return status
     $@ ? 0 : 1;
+}
+
+##----------------------------------------------------------------------
+##	get_public() retrieves the sysid public identifier.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_public($pubid);
+##
+sub get_public {
+    my $this = shift;
+    my $pubid = shift;
+    $pubid =~ s/\s+/ /g;
+
+    ($this->{PUBLIC}{$pubid}{sysid},
+     $this->{PUBLIC}{$pubid}{base},
+     $this->{PUBLIC}{$pubid}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_gen_ent() retrieves the sysid general entity name.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_gen_ent($name);
+##
+sub get_gen_ent {
+    my $this = shift;
+    my $name = shift;
+
+    ($this->{ENTITY}{$name}{sysid},
+     $this->{ENTITY}{$name}{base},
+     $this->{ENTITY}{$name}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_parm_ent() retrieves the sysid for parameter entity name.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_parm_ent($name);
+##
+sub get_parm_ent {
+    my $this = shift;
+    my $name = shift;
+
+    ($this->{'ENTITY%'}{$name}{sysid},
+     $this->{'ENTITY%'}{$name}{base},
+     $this->{'ENTITY%'}{$name}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_doctype() retrieves the sysid for the entity denoted
+##	by document type name.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_doctype($name);
+##
+sub get_doctype {
+    my $this = shift;
+    my $name = shift;
+
+    ($this->{DOCTYPE}{$name}{sysid},
+     $this->{DOCTYPE}{$name}{base},
+     $this->{DOCTYPE}{$name}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_linktype() retrieves the sysid for the entity denoted
+##	by link type name.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_linktype($name);
+##
+sub get_linktype {
+    my $this = shift;
+    my $name = shift;
+
+    ($this->{LINKTYPE}{$name}{sysid},
+     $this->{LINKTYPE}{$name}{base},
+     $this->{LINKTYPE}{$name}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_notation() retrieves the sysid for the entity denoted
+##	by notation name.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_notation($name);
+##
+sub get_notation {
+    my $this = shift;
+    my $name = shift;
+
+    ($this->{NOTATION}{$name}{sysid},
+     $this->{NOTATION}{$name}{base},
+     $this->{NOTATION}{$name}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_system() retrieves the sysid for the entity denoted
+##	by a system id.
+##
+##	Usage:
+##	    ($sysid, $base, $override) = $cat->get_system($esysid);
+##
+sub get_system {
+    my $this = shift;
+    my $sysid = shift;
+
+    ($this->{SYSTEM}{$sysid}{sysid},
+     $this->{SYSTEM}{$sysid}{base},
+     $this->{SYSTEM}{$sysid}{override});
+}
+
+##----------------------------------------------------------------------
+##	get_sgmldecl() retrieves the sysid for the SGML declaration.
+##
+##	Usage:
+##	    ($sysid, $base) = $cat->get_sgmldecl();
+##
+sub get_sgmldecl {
+    my $this = shift;
+
+    ($this->{SGMLDECL}{sysid},
+     $this->{SGMLDECL}{base});
+}
+
+##----------------------------------------------------------------------
+##	get_dtddecl() retrieves the sysid for the SGML declaration
+##	associated with a doctype external subset pubid.
+##
+##	Usage:
+##	    ($sysid, $base) = $cat->get_dtddecl($pubid);
+##
+sub get_dtddecl {
+    my $this = shift;
+    my $pubid = shift;
+    $pubid =~ s/\s+/ /g;
+
+    ($this->{DTDDECL}{$pubid}{sysid},
+     $this->{DTDDECL}{$pubid}{base});
+}
+
+##----------------------------------------------------------------------
+##	get_document() retrieves the sysid for the document entity.
+##
+##	Usage:
+##	    ($sysid, $base) = $cat->get_document();
+##
+sub get_document {
+    my $this = shift;
+
+    ($this->{DOCUMENT}{sysid},
+     $this->{DOCUMENT}{base});
+}
+
+##----------------------------------------------------------------------
+##	get_delegate() checks a pubid to see if a pubid-prefix has
+##	been defined that matches the pubid.  If so, then a sysid of
+##	a catalog is returned.  The catalog should be used to resolve
+##	pubids that match the prefix.
+##
+##	Usage:
+##	    ($sysid, $base) = $cat->get_delegate($pubid);
+##
+sub get_delegate {
+    my $this = shift;
+    my $in_pubid = shift;
+    my $len, @pubpres;
+
+    $in_pubid =~ s/\s+/ /g;
+
+    ## Sort prefixes by size with largest first
+    @pubpres = sort { $b <=> $a } keys %{$this->{_DelSizes}};
+
+    ## Check if there is a pubid prefix for in_pubid
+    foreach $len (@pubpres) {
+	foreach (@{$this->{_DelSizes}{$len}}) {
+	    if ($in_pubid =~ /^$_/) {
+		return ($this->{DELEGATE}{$_}{sysid},
+			$this->{DELEGATE}{$_}{base});
+	    }
+	}
+    }
+    ('', '');
 }
 
 ##**********************************************************************##
@@ -326,3 +559,5 @@ sub _get_next_token {
     ($token, $islit);
 }
 
+##----------------------------------------------------------------------
+1;
