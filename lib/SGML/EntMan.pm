@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: EntMan.pm,v 1.2 1996/12/02 11:22:39 ehood Exp $ %Z%
+##      %Z% %Y% $Id: EntMan.pm,v 1.3 1996/12/02 13:05:00 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -119,82 +119,62 @@ sub read_catalog_handle {
 ##	undef is returned if entity could not be resolved, and a
 ##	warning message is printed to stderr.
 ##
+##	If $name contains a '%' character, it is treated a parameter
+##	entity name.
+##
 sub open_entity {
     my $this = shift;
     my($name, $in_pubid, $in_sysid) = @_;
 
-    $name = ''      unless $name =~ /\S/;
-    $in_pubid = ''  unless $in_pubid =~ /\S/;
-    $in_sysid = ''  unless $in_sysid =~ /\S/;
-
-    ## Check if arguments valid
-    unless ($name or $in_pubid or $in_sysid) {
-	$this->_errMsg("Error: Null arguments passed to open_entity");
-	return undef;
-    }
-
-    my $psysid, $pbase, $po;
-    my $ssysid, $sbase;
-    my $esysid, $ebase, $eo;
-    my $fh = undef;
-
-    ## Look up name, pubid and sysid
-    ($psysid, $pbase, $po) = $this->get_public($in_pubid)
-	if $in_pubid;
-    ($ssysid, $sbase) = $this->get_system($in_sysid)
-	if $in_sysid;
-    ($esysid, $ebase, $eo) = $this->get_ent($name)
-	if $name;
-
-    ## Open entity.
-    BLK: {
-	## Check if using pubid
-	if ($in_pubid and (!$sysid or $po)) {
-	    if (!defined($fh = &OpenSysId($psysid, $pbase))) {
-		$this->_errMsg(qq{Unable to open "$in_pubid" => "$esysid"});
-	    }
-	    last BLK;
-	}
-
-	## Check if using entity name
-	if ($name and (!$sysid or $eo)) {
-	    if (!defined($fh = &OpenSysId($esysid, $ebase))) {
-		$this->_errMsg(qq{Unable to open "$name" => "$esysid"});
-	    }
-	    last BLK;
-	}
-
-	## Check sysid
-	if ($ssysid) {
-	    if (!defined($fh = &OpenSysId($ssysid, $sbase))) {
-		$this->_errMsg(qq{Unable to open "$in_sysid" => "$ssysid"});
-	    }
-	} else {
-	    if (!defined($fh = &OpenSysId($in_sysid))) {
-		$this->_errMsg(qq{Unable to open "$in_sysid"});
-	    }
-	}
-	last BLK;
-    }
-    $fh;
+    $this->_open_entity($name, $in_pubid, $in_sysid, $this->get_ent($name));
 }
 
 ##----------------------------------------------------------------------
-sub open_entity_name {
+##	open_doctype() returns a filehandle reference to the doctype
+##	specified entity name, pubid, and/or sysid.
+##
+##	Usage:
+##	    $fh = $entman->open_doctype($name, $pubid, $sysid);
+##	
+##	undef is returned if doctype could not be resolved, and a
+##	warning message is printed to stderr.
+##
+sub open_doctype {
     my $this = shift;
-    $this->open_entity(shift, '', '');
+    my($name, $in_pubid, $in_sysid) = @_;
+
+    $this->_open_entity($name, $in_pubid, $in_sysid,
+			$this->get_doctype($name));
 }
 
 ##----------------------------------------------------------------------
+##	open_public_id() returns a filehandle reference to the
+##	entity denoted by a public id.
+##
+##	Usage:
+##	    $fh = $entman->open_public_id($pubid);
+##	
+##	undef is returned if public id could not be resolved, and a
+##	warning message is printed to stderr.
+##
 sub open_public_id {
     my $this = shift;
-    $this->open_entity('', shift, '');
+    $this->_open_entity('', shift);
 }
 
 ##----------------------------------------------------------------------
+##	open_system_id() returns a filehandle reference to the
+##	entity denoted by a system id.
+##
+##	Usage:
+##	    $fh = $entman->open_system_id($sysid);
+##	
+##	undef is returned if system id could not be resolved, and a
+##	warning message is printed to stderr.
+##
 sub open_system_id {
     my $this = shift;
-    $this->open_entity('', '', shift);
+    $this->_open_entity('', '', shift);
 }
 
 ##**********************************************************************##
@@ -267,6 +247,9 @@ sub get_system {
 ##----------------------------------------------------------------------
 ##	get_ent resolves an entity name to a system id.
 ##
+##	If $name contains a '%' character, it is treated a parameter
+##	entity name.
+##
 sub get_ent {
     my $this = shift;
     my $name = shift;
@@ -283,6 +266,22 @@ sub get_ent {
 	    ($sysid, $base, $o) = $EnvCat->get_gen_ent($name)
 		unless $sysid;
 	}
+    }
+    ($sysid, $base, $o);
+}
+
+##----------------------------------------------------------------------
+##	get_doctype resolves a doctype name to a system id.
+##
+sub get_doctype {
+    my $this = shift;
+    my $name = shift;
+    my $sysid, $base, $o;
+
+    if ($name) {
+	($sysid, $base, $o) = $this->{Catalog}->get_doctype($name);
+	($sysid, $base, $o) = $EnvCat->get_doctype($name)
+	    unless $sysid;
     }
     ($sysid, $base, $o);
 }
@@ -333,6 +332,66 @@ sub resolve_delegate {
 ##**********************************************************************##
 ##	PRIVATE METHODS
 ##**********************************************************************##
+
+##----------------------------------------------------------------------
+##
+sub _open_entity {
+    my $this = shift;
+    my($name, $in_pubid, $in_sysid, $esysid, $ebase, $eo) = @_;
+
+    $name = ''      unless $name =~ /\S/;
+    $in_pubid = ''  unless $in_pubid =~ /\S/;
+    $in_sysid = ''  unless $in_sysid =~ /\S/;
+
+    ## Check if arguments valid
+    unless ($name or $in_pubid or $in_sysid) {
+	$this->_errMsg("Error: Null arguments passed to _open_entity");
+	return undef;
+    }
+
+    my $psysid, $pbase, $po;
+    my $ssysid, $sbase;
+    my $esysid, $ebase, $eo;
+    my $fh = undef;
+
+    ## Look up name, pubid and sysid
+    ($psysid, $pbase, $po) = $this->get_public($in_pubid)
+	if $in_pubid;
+    ($ssysid, $sbase) = $this->get_system($in_sysid)
+	if $in_sysid;
+
+    ## Open entity.
+    BLK: {
+	## Check if using pubid
+	if ($in_pubid and (!$sysid or $po)) {
+	    if (!defined($fh = &OpenSysId($psysid, $pbase))) {
+		$this->_errMsg(qq{Unable to open "$in_pubid" => "$psysid"});
+	    }
+	    last BLK;
+	}
+
+	## Check if using entity name
+	if ($name and (!$sysid or $eo)) {
+	    if (!defined($fh = &OpenSysId($esysid, $ebase))) {
+		$this->_errMsg(qq{Unable to open "$name" => "$esysid"});
+	    }
+	    last BLK;
+	}
+
+	## Check sysid
+	if ($ssysid) {
+	    if (!defined($fh = &OpenSysId($ssysid, $sbase))) {
+		$this->_errMsg(qq{Unable to open "$in_sysid" => "$ssysid"});
+	    }
+	} else {
+	    if (!defined($fh = &OpenSysId($in_sysid))) {
+		$this->_errMsg(qq{Unable to open "$in_sysid"});
+	    }
+	}
+	last BLK;
+    }
+    $fh;
+}
 
 ##----------------------------------------------------------------------
 sub _errMsg {
