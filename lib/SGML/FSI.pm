@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: FSI.pm,v 1.5 1997/09/15 14:58:20 ehood Exp $  %Z%
+##      %Z% $Id: FSI.pm,v 1.6 1997/09/18 14:36:01 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -26,9 +26,9 @@
 ##	The following is an example of how to use this module:
 ##
 ##	    use FileHandle;
-##	    use SGML::FSI qw(OpenSysId);
+##	    use SGML::FSI qw( &OpenSysId );
 ##
-##	    $fh = &OpenSysId($sysid, $base);
+##	    $fh = OpenSysId($sysid, $base);
 ##	    # ...
 ##
 ##  Notes:
@@ -44,14 +44,18 @@
 
 package SGML::FSI;
 
-use vars qw(@ISA @EXPORT $VERSION @SGML_SEARCH_PATH $PATHSEP);
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION @SGML_SEARCH_PATH $PATHSEP);
 
 use Exporter ();
 @ISA = qw( Exporter );
 
-@EXPORT = qw( &OpenSysId );
-
-$VERSION = "0.03";
+@EXPORT = qw(
+    &OpenSysId
+);
+@EXPORT_OK = qw(
+    &ResolveSysId
+);
+$VERSION = "0.04";
 
 use FileHandle;
 use OSUtil;
@@ -69,28 +73,41 @@ use OSUtil;
 ##**********************************************************************##
 
 ##----------------------------------------------------------------------
-##	OpenSysId() returns a reference to a Perl filehandle for a
-##	sysid.  undef is returned if sysid could not be opened.
+##	ResolveSysId() returns a resolved system identifier based upon
+##	passed in sysid and its base.  The behavior of this function
+##	is a follows:
 ##
-sub OpenSysId {
+##	    o	If $sysid is absolute, it is the return value.
+##	    o	If $base is defined, the return value is $base
+##		applied to $sysid to for a new sysid.
+##	    o	Else, SGML_SEARCH_PATH envariable is searched
+##		for $sysid.  If $sysid exists in SGML_SEARCH_PATH,
+##		it returns the resolved pathname.  Else, $sysid
+##		is returned.
+##
+##	This function appears to be potentially a big noop, but
+##	is useful for have a base indentifier applied to a relative
+##	sysid and to have it do the SGML_SEARCH_PATH search if
+##	required.
+##
+sub ResolveSysId {
     my($sysid, $base) = @_;
 
     return undef  unless $sysid =~ /\S/;
 
     ## Check if sysid an absolute pathname
-    if (&OSUtil::is_absolute_path($sysid)) {
-	return new FileHandle $sysid;
+    if (OSUtil::is_absolute_path($sysid)) {
+	return $sysid;
     }
 
     ## See if base can be used
     if ($base) {
-	$sysid = $base . $DIRSEP . $sysid;
-	return new FileHandle $sysid;
+	return $base . $DIRSEP . $sysid;
     }
 
     ## See if sysid in current directory
     if (-e $sysid) {
-	return new FileHandle $sysid;
+	return $sysid;
     }
 
     ## If reached here, got to search for sysid
@@ -98,11 +115,23 @@ sub OpenSysId {
     foreach (@SGML_SEARCH_PATH) {
 	$pathname = $_ . $DIRSEP . $sysid;
 	if (-e $pathname) {
-	    return new FileHandle $pathname;
+	    return $pathname;
 	}
     }
 
     undef;
+}
+
+
+##----------------------------------------------------------------------
+##	OpenSysId() returns a reference to a Perl filehandle for a
+##	sysid.  undef is returned if sysid could not be opened.
+##
+sub OpenSysId {
+    my($sysid, $base) = @_;
+
+    return undef  unless $sysid =~ /\S/;
+    return new FileHandle ResolveSysId($sysid, $base);
 }
 
 ##----------------------------------------------------------------------
