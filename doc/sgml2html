@@ -1,10 +1,11 @@
 #!/bin/csh -f
 #
-#	%Z% %Y% $Id: sgml2html,v 1.1 1996/09/30 16:37:24 ehood Exp $ %Z%
+#	%Z% $Id: sgml2html,v 1.2 1997/09/15 11:30:05 ehood Exp $  %Z%
 #
 
 set destdir = "html"
 
+/bin/rm $destdir/*.html
 foreach file ($argv)
     spam -x -x $file > $destdir/${file:r}.html
 end
