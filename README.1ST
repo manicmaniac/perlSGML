@@ -1,0 +1,86 @@
+README for perlSGML
+    $Date: 1997/09/16 15:48:26 $ 
+---------------------------------------------------------------------------
+    Copyright (C) 1994-1997  Earl Hood, ehood@medusa.acs.uci.edu
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+    02111-1307, USA.
+---------------------------------------------------------------------------
+CONTENTS of distribution:
+
+CHANGES/	Directory containing revision history of software.
+COPYING 	GNU General Public License.
+MANIFEST	File listing used by install.me
+README.1ST	The file you are reading.
+VERSIONS	Version list of programs/libraries.
+doc/      	Documentation.
+dtd2html*	Create HTML files to navigate a DTD.
+dtddiff*	List changes in a DTD.
+dtdtree*	Output content hierarchies of SGML elements.
+dtdview*	Interactively query a DTD.
+ebt/		Programs specific to EBT's DynaText(tm) product.  See
+		README in the directory for more information.
+ents/    	SGML entity files.
+examples/	Directory containing example files/output of programs.
+install.me*	Installation program.
+lib/     	Perl libraries.
+sgm/      	Sample SGML files (mostly DTDs)
+stripsgml* 	Strip tags from an SGML document instance.
+
+---------------------------------------------------------------------------
+INSTALLATION
+
+To install the perlSGML software, type the following at your shell
+prompt:
+
+    perl install.me
+
+Notes on Installation Program
+
+    o	The '#!' line in the installed programs are set to point to
+	the Perl executable specified in the installation process.
+
+    o	Programs are updated to include the path location of the
+	installed library files.  Hence, you can install the library
+	files in any location, and the program will still work.
+
+---------------------------------------------------------------------------
+DOCUMENTATION
+
+Documentation is located in the directory doc/.  The documentation
+is in HTML.  The documentation is separated in multiple files.
+Loading "perlSGML.html" into a WWW browser will get you started.
+
+---------------------------------------------------------------------------
+BUGS/COMMENTS/SUGGESTIONS?
+
+    If you have any bugs/comments/suggestions, feel free to drop me
+    an e-mail message at ehood@medusa.acs.uci.edu.
+
+    If it is a bug you are reporting, please include the following in
+    your message:
+
+        o  Version of Perl (can be retrievied by "perl -v").
+        o  Version of the program in question.
+        o  The exact command-line used to invoke the program.
+        o  Error/diagnostic messages from the program.
+        o  Any other information that might prove useful.
+
+    Before sending e-mail, make sure the documentation does not already
+    have an answer to your question/problem.
+
+---------------------------------------------------------------------------
+$Date: 1997/09/16 15:48:26 $ 
+Earl Hood, ehood@medusa.acs.uci.edu
