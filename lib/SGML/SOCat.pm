@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: SOCat.pm,v 1.4 1996/11/20 08:02:59 ehood Exp $ %Z%
+##      %Z% %Y% $Id: SOCat.pm,v 1.5 1996/11/21 10:50:42 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -115,7 +115,7 @@ sub read_file {
     if (open($handle, $fname)) {
 	$this->read_handle(\*$handle, $fname);
     } else {
-	$this->_errMsg("Unable to open $fname");
+	$this->_errMsg(qq{Unable to open "$fname"});
     }
 }
 
@@ -255,6 +255,12 @@ sub read_handle {
 ##	get_public() retrieves the sysid public identifier.
 ##
 ##	Usage:
+##
+##	Scalar context:  Check if pubid has an entry
+##	    if ($cat->get_public($pubid)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of pubid
 ##	    ($sysid, $base, $override) = $cat->get_public($pubid);
 ##
 sub get_public {
@@ -262,39 +268,60 @@ sub get_public {
     my $pubid = shift;
     $pubid =~ s/\s+/ /g;
 
-    ($this->{PUBLIC}{$pubid}{sysid},
-     $this->{PUBLIC}{$pubid}{base},
-     $this->{PUBLIC}{$pubid}{override});
+    wantarray
+    ? 
+	($this->{PUBLIC}{$pubid}{sysid},
+	 $this->{PUBLIC}{$pubid}{base},
+	 $this->{PUBLIC}{$pubid}{override})
+    :
+	defined($this->{PUBLIC}{$pubid});
 }
 
 ##----------------------------------------------------------------------
 ##	get_gen_ent() retrieves the sysid general entity name.
 ##
 ##	Usage:
+##	Scalar context:  Check if general entity name has an entry
+##	    if ($cat->get_gen_ent($name)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of general entity
 ##	    ($sysid, $base, $override) = $cat->get_gen_ent($name);
 ##
 sub get_gen_ent {
     my $this = shift;
     my $name = shift;
 
-    ($this->{ENTITY}{$name}{sysid},
-     $this->{ENTITY}{$name}{base},
-     $this->{ENTITY}{$name}{override});
+    wantarray ?
+	($this->{ENTITY}{$name}{sysid},
+	 $this->{ENTITY}{$name}{base},
+	 $this->{ENTITY}{$name}{override})
+    :
+	defined($this->{ENTITY}{$name});
 }
 
 ##----------------------------------------------------------------------
 ##	get_parm_ent() retrieves the sysid for parameter entity name.
 ##
 ##	Usage:
+##	Scalar context:  Check if parameter entity name has an entry
+##	    if ($cat->get_parm_ent($name)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of parameter entity
 ##	    ($sysid, $base, $override) = $cat->get_parm_ent($name);
 ##
 sub get_parm_ent {
     my $this = shift;
     my $name = shift;
 
-    ($this->{'ENTITY%'}{$name}{sysid},
-     $this->{'ENTITY%'}{$name}{base},
-     $this->{'ENTITY%'}{$name}{override});
+    wantarray
+    ?
+	($this->{'ENTITY%'}{$name}{sysid},
+	 $this->{'ENTITY%'}{$name}{base},
+	 $this->{'ENTITY%'}{$name}{override})
+    :
+	defined($this->{'ENTITY%'}{$name});
 }
 
 ##----------------------------------------------------------------------
@@ -302,15 +329,24 @@ sub get_parm_ent {
 ##	by document type name.
 ##
 ##	Usage:
+##	Scalar context:  Check if doctype has an entry
+##	    if ($cat->get_doctype($name)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of doctype external subset
 ##	    ($sysid, $base, $override) = $cat->get_doctype($name);
 ##
 sub get_doctype {
     my $this = shift;
     my $name = shift;
 
-    ($this->{DOCTYPE}{$name}{sysid},
-     $this->{DOCTYPE}{$name}{base},
-     $this->{DOCTYPE}{$name}{override});
+    wantarray
+    ?
+	($this->{DOCTYPE}{$name}{sysid},
+	 $this->{DOCTYPE}{$name}{base},
+	 $this->{DOCTYPE}{$name}{override})
+    :
+	defined($this->{DOCTYPE}{$name});
 }
 
 ##----------------------------------------------------------------------
@@ -318,15 +354,24 @@ sub get_doctype {
 ##	by link type name.
 ##
 ##	Usage:
+##	Scalar context:  Check if linktype name has an entry
+##	    if ($cat->get_linktype($name)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of linktype nsmr
 ##	    ($sysid, $base, $override) = $cat->get_linktype($name);
 ##
 sub get_linktype {
     my $this = shift;
     my $name = shift;
 
-    ($this->{LINKTYPE}{$name}{sysid},
-     $this->{LINKTYPE}{$name}{base},
-     $this->{LINKTYPE}{$name}{override});
+    wantarray
+    ?
+	($this->{LINKTYPE}{$name}{sysid},
+	 $this->{LINKTYPE}{$name}{base},
+	 $this->{LINKTYPE}{$name}{override})
+    :
+	defined($this->{LINKTYPE}{$name});
 }
 
 ##----------------------------------------------------------------------
@@ -334,15 +379,23 @@ sub get_linktype {
 ##	by notation name.
 ##
 ##	Usage:
+##	Scalar context:  Check if notation has an entry
+##	    if ($cat->get_notation($name)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of notation
 ##	    ($sysid, $base, $override) = $cat->get_notation($name);
 ##
 sub get_notation {
     my $this = shift;
     my $name = shift;
 
-    ($this->{NOTATION}{$name}{sysid},
-     $this->{NOTATION}{$name}{base},
-     $this->{NOTATION}{$name}{override});
+    wantarray ?
+	($this->{NOTATION}{$name}{sysid},
+	 $this->{NOTATION}{$name}{base},
+	 $this->{NOTATION}{$name}{override})
+    :
+	defined($this->{NOTATION}{$name});
 }
 
 ##----------------------------------------------------------------------
@@ -350,28 +403,46 @@ sub get_notation {
 ##	by a system id.
 ##
 ##	Usage:
+##	Scalar context:  Check if sysid has an entry
+##	    if ($cat->get_system($esysid)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of a sysid
 ##	    ($sysid, $base, $override) = $cat->get_system($esysid);
 ##
 sub get_system {
     my $this = shift;
     my $sysid = shift;
 
-    ($this->{SYSTEM}{$sysid}{sysid},
-     $this->{SYSTEM}{$sysid}{base},
-     $this->{SYSTEM}{$sysid}{override});
+    wantarray
+    ?
+	($this->{SYSTEM}{$sysid}{sysid},
+	 $this->{SYSTEM}{$sysid}{base},
+	 $this->{SYSTEM}{$sysid}{override})
+    :
+	defined($this->{SYSTEM}{$sysid});
 }
 
 ##----------------------------------------------------------------------
 ##	get_sgmldecl() retrieves the sysid for the SGML declaration.
 ##
 ##	Usage:
+##	Scalar context:  Check if sgmldecl entry defined
+##	    if ($cat->get_sgmldecl()) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of sgmldecl
 ##	    ($sysid, $base) = $cat->get_sgmldecl();
 ##
 sub get_sgmldecl {
     my $this = shift;
 
-    ($this->{SGMLDECL}{sysid},
-     $this->{SGMLDECL}{base});
+    wantarray
+    ?
+	($this->{SGMLDECL}{sysid},
+	 $this->{SGMLDECL}{base})
+    :
+	defined($this->{SGMLDECL});
 }
 
 ##----------------------------------------------------------------------
@@ -379,6 +450,11 @@ sub get_sgmldecl {
 ##	associated with a doctype external subset pubid.
 ##
 ##	Usage:
+##	Scalar context:  Check if dtddecl defined
+##	    if ($cat->get_dtddecl($pubid)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of dtddecl
 ##	    ($sysid, $base) = $cat->get_dtddecl($pubid);
 ##
 sub get_dtddecl {
@@ -386,21 +462,34 @@ sub get_dtddecl {
     my $pubid = shift;
     $pubid =~ s/\s+/ /g;
 
-    ($this->{DTDDECL}{$pubid}{sysid},
-     $this->{DTDDECL}{$pubid}{base});
+    wantarray
+    ?
+	($this->{DTDDECL}{$pubid}{sysid},
+	 $this->{DTDDECL}{$pubid}{base})
+    :
+	defined($this->{DTDDECL}{$pubid});
 }
 
 ##----------------------------------------------------------------------
 ##	get_document() retrieves the sysid for the document entity.
 ##
 ##	Usage:
+##	Scalar context:  Check if document entity defined
+##	    if ($cat->get_document()) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of document entity
 ##	    ($sysid, $base) = $cat->get_document();
 ##
 sub get_document {
     my $this = shift;
 
-    ($this->{DOCUMENT}{sysid},
-     $this->{DOCUMENT}{base});
+    wantarray
+    ?
+	($this->{DOCUMENT}{sysid},
+	 $this->{DOCUMENT}{base})
+    :
+	($this->{DOCUMENT});
 }
 
 ##----------------------------------------------------------------------
@@ -410,12 +499,18 @@ sub get_document {
 ##	pubids that match the prefix.
 ##
 ##	Usage:
+##	Scalar context:  Check if pubid has a prefix entry
+##	    if ($cat->get_delegate($pubid)) {
+##		...
+##	    }
+##	Array context:  Retrieve sysid of catalog for pubid
 ##	    ($sysid, $base) = $cat->get_delegate($pubid);
 ##
 sub get_delegate {
     my $this = shift;
     my $in_pubid = shift;
     my $len, @pubpres;
+    my $pubpre = '';
 
     $in_pubid =~ s/\s+/ /g;
 
@@ -423,15 +518,20 @@ sub get_delegate {
     @pubpres = sort { $b <=> $a } keys %{$this->{_DelSizes}};
 
     ## Check if there is a pubid prefix for in_pubid
-    foreach $len (@pubpres) {
-	foreach (@{$this->{_DelSizes}{$len}}) {
+    OUTER: foreach $len (@pubpres) {
+	INNER: foreach (@{$this->{_DelSizes}{$len}}) {
 	    if ($in_pubid =~ /^$_/) {
-		return ($this->{DELEGATE}{$_}{sysid},
-			$this->{DELEGATE}{$_}{base});
+		$pubpre = $_;
+		last OUTER;
 	    }
 	}
     }
-    ('', '');
+    wantarray
+    ?
+	($pubpre ? ($this->{DELEGATE}{$pubpre}{sysid},
+		    $this->{DELEGATE}{$pubpre}{base}) : ())
+    :
+	$pubpre ? 1 : 0;
 }
 
 ##**********************************************************************##
