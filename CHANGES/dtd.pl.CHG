@@ -2,6 +2,16 @@ Revision History for dtd.pl
 -----------------------------
 	%Z% $RCSfile: dtd.pl.CHG,v $ %Z%
 ==============================================================================
+2.4.1	(Dec 05, 1996)
+
+    Bug Fixes
+
+	o Fixed syntatical constructs that were not legal Perl 4, but
+	  legal under Perl 5.
+
+	o Forward slashes are recognized within MS-DOS pathanmes.
+
+==============================================================================
 2.4.0	(Oct 09, 1996)
 
     Enhancements/Changes
