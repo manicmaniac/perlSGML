@@ -1,4 +1,4 @@
-# 	%Z% %Y% $Id: Makefile,v 1.1 1996/09/30 16:37:22 ehood Exp $ %Z%
+# 	%Z% %Y% $Id: Makefile,v 1.2 1996/09/30 16:39:29 ehood Exp $ %Z%
 #
 
 SGMLDOCS = \
@@ -22,7 +22,7 @@ HTMLDOCS = \
     stripsgml.html
 
 all:
-	./sgml2html $(SGMLDOCS)
+	/bin/csh -f sgml2html $(SGMLDOCS)
 	chmod -R a+r,a+X .
 
 dist:
