@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Util.pm,v 1.1 1996/12/17 12:50:10 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Util.pm,v 1.2 1996/12/17 14:50:40 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -34,8 +34,15 @@ use Exporter ();
 
 @EXPORT = ();
 @EXPORT_OK = ();
-%EXPORT_TAGS = ();
+%EXPORT_TAGS = (
+    Routines => [
+	qw( &SGMLparse_attr_spec
+	  )
+    ],
+);
 $VERSION = "0.01";
+
+Exporter::export_tags('Routines');
 
 ##---------------------------------------------------------------------------##
 ##	SGMLparse_attr_spec parses an attribute specification list
