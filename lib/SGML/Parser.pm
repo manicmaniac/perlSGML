@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Parser.pm,v 1.3 1996/12/27 10:09:50 ehood Exp $  %Z%
+##      %Z% $Id: Parser.pm,v 1.4 1997/01/08 13:16:15 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -41,7 +41,7 @@ package SGML::Parser;
 
 use Exporter ();
 @ISA = qw( Exporter );
-$VERSION = "0.01";
+$VERSION = "0.02";
 @EXPORT = ();
 @EXPORT_OK = ();
 %EXPORT_TAGS = ();
@@ -253,11 +253,13 @@ sub parse_data {
             $attr = '';
             STAG: while (1) {
                 if ($buf =~ /$tagc/o) {
-                    $attr = $`;  $tmp = $';
+                    $attr .= $`;  $buf = $';
                     if (!&SGMLopen_lit($attr)) {
-	                $buf = $tmp;
                         last STAG;
-                    }
+                    } else {
+			$attr .= $tagc_;
+			next;
+		    }
                 }
                 if (!defined($tmp = $this->_get_line())) {
                     $this->_errMsg("Unexpected EOF; start tag not finished");
