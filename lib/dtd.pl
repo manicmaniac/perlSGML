@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.1 1996/09/30 13:13:26 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.2 1996/10/01 13:47:35 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -33,6 +33,7 @@
 ##	DTDget_base_children	-- Get base elements of an element
 ##	DTDget_elem_attr	-- Get attributes for an element
 ##	DTDget_elements		-- Get array of all elements
+##	DTDget_elements_of_attr	-- Get array of elements that have attribute
 ##	DTDget_exc_children	-- Get exclusion elements of an element
 ##	DTDget_gen_ents		-- Get general entities defined in DTD
 ##	DTDget_gen_data_ents	-- Get general entities: {PC,C,S}DATA, PI
@@ -52,6 +53,10 @@
 ##	DTDread_mapfile		-- Parse entity map file
 ##	DTDreset		-- Reset all internal data for DTD
 ##	DTDset_comment_callback -- Set SGML comment callback
+##	DTDset_debug_callback	-- Set debug callback
+##	DTDset_debug_handle	-- Set debug filehandle
+##	DTDset_err_callback	-- Set error callback
+##	DTDset_err_handle	-- Set error filehandle
 ##	DTDset_pi_callback	-- Set processing instruction callback
 ##	DTDset_verbosity 	-- Set verbosity flag
 ##  -------------------------------------------------------------------------
@@ -77,6 +82,8 @@
 ##	o <!ATTLIST #NOTATION is ignored.
 ##
 ##      o LINKTYPE, SHORTREF, USEMAP declarations are ignored.
+##
+##	o Rank element declarations are not supported.
 ##
 ##---------------------------------------------------------------------------##
 
@@ -173,8 +180,6 @@ $etago_	= '</';
 $tagc	= '>';		# Tag close
 $tagc_	= '>';
 
-$mso	= '\['; 	# Marked section open
-$mso_	= '[';
 $msc	= '\]\]';	# Marked section close
 $msc_	= ']]';
 
@@ -350,6 +355,7 @@ $VERBOSE = 0;		   # Printout what is going on.
 ## Element map: <!ATTLIST ...> ##
 ##-----------------------------##
 %Attribute	= ();	# Attributes for elements
+%ElemsOfAttr	= ();	# Elements for attributes
 
 ##  %Attribute Description
 ##  ----------------------
@@ -405,6 +411,11 @@ $DidParents	= 0;	# Flag if parent elements has been computed
 %Parents 	= ();	# Possible parents of elements
 %TopElement 	= ();	# Top most elements
 
+$DebugHandle	= 'STDERR';
+$DebugCallback	= '';
+$ErrHandle	= 'STDERR';
+$ErrMsgCallback	= '';
+
 ##------------------------------------##
 ## Environment/Command-line Variables ##
 ##------------------------------------##
@@ -413,10 +424,11 @@ $DidParents	= 0;	# Flag if parent elements has been computed
 ##	variable P_SGML_PATH to tell the dtd libaray which paths to
 ##	search.  The paths listed must be ':' (';' for MSDOS) separated.
 ##
-##	Support for the SGML_SEARCH_PATH envariable had been added.
-##	(11/08/95).
+##	Support for the SGML_SEARCH_PATH envariable included to search
+##	path.
 ##
 $pathsep = $ENV{'COMSPEC'} ? ';' : ':';
+$dirsep  = $ENV{'COMSPEC'} ? '\\' : '/';
 @P_SGML_PATH = ();
 {
     local(@a) = (split(/$pathsep/o, $ENV{'P_SGML_PATH'}),
@@ -431,6 +443,7 @@ $pathsep = $ENV{'COMSPEC'} ? ';' : ':';
                             ##----------------##
                             ## Main Functions ##
                             ##----------------##
+
 ##---------------------------------------------------------------------------
 ##	DTDget_elements() retrieves all the elements defined in the DTD.
 ##	An optional flag argument can be passed to the routine to
@@ -441,18 +454,30 @@ sub main'DTDget_elements {
     local($nosort) = shift;
     $nosort ? @Elements : sort keys %ElemCont;
 }
+
+##---------------------------------------------------------------------------
+##	DTDget_elements_of_attr() retrieves all the elements that
+##	have the attribute $attr.
+##
+sub main'DTDget_elements_of_attr {
+    local($attr) = shift;
+    $attr =~ tr/A-Z/a-z/;
+    sort split(/$;/o, $ElemsOfAttr{$attr});
+}
+
 ##---------------------------------------------------------------------------
 ##	DTDget_elem_attr() retrieves an associative array defining the
 ##	attributes associated with element $elem.
 ##
 sub main'DTDget_elem_attr {
-    local($elem) = shift @_;
+    local($elem) = shift;
     local(%attr);
 
     $elem =~ tr/A-Z/a-z/;
     %attr = eval "%$Attribute{$elem}" if $Attribute{$elem};
     %attr;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_top_elements() retrieves the top-most elements in the DTD.
 ##
@@ -460,6 +485,7 @@ sub main'DTDget_top_elements {
     &compute_parents();
     return sort keys %TopElement;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDis_attr_keyword() returns 1 if $word is an SGML reserved word
 ##	for an attribute value.
@@ -468,6 +494,7 @@ sub main'DTDis_attr_keyword {
     local($word) = shift;
     ($word =~ /^\s*($attr_keywords)\s*$/oi ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDis_child() return 1 if $child is a child element of $elem.
 ##
@@ -483,6 +510,7 @@ sub main'DTDis_child {
     %tmp = ();
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDis_elem_keyword() returns 1 if $word is an SGML reserved word
 ##	used in an element content rule.
@@ -491,6 +519,7 @@ sub main'DTDis_elem_keyword {
     local($word) = shift;
     ($word =~ /^\s*($elem_keywords)\s*$/oi ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDis_element() returns 1 if passed in string is an element
 ##	defined in the DTD.  Else it returns zero.
@@ -500,16 +529,19 @@ sub main'DTDis_element {
     $elem =~ tr/A-Z/a-z/;
     ($ElemCont{$elem} ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 sub main'DTDis_occur_indicator {
     local($str) = shift;
     ($str =~ /^\s*[$plus$opt$rep]\s*$/oi ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 sub main'DTDis_group_connector {
     local($str) = shift;
     ($str =~ /^\s*[$seq$and$or]\s*$/oi ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDis_tag_name() returns 1 if $word is a legal tag name.
 ##
@@ -517,6 +549,7 @@ sub main'DTDis_tag_name {
     local($word) = shift;
     ($word =~ /^\s*[$namechars]+\s*$/oi ? 1 : 0);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_parents() returns an array of elements that can be parent
 ##	elements of $elem.
@@ -528,6 +561,7 @@ sub main'DTDget_parents {
     &compute_parents();
     return sort split(' ', $Parents{$elem});
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_base_children() returns an array of the elements in
 ##	the base model group of $elem.
@@ -540,6 +574,7 @@ sub main'DTDget_base_children {
     $elem =~ tr/A-Z/a-z/;
     return &extract_elem_names($ElemCont{$elem}, $andcon);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_inc_children() returns an array of the elements in
 ##	the inclusion group of $elem content rule.
@@ -549,6 +584,7 @@ sub main'DTDget_inc_children {
     $elem =~ tr/A-Z/a-z/;
     return &extract_elem_names($ElemInc{$elem}, $andcon);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_exc_children() returns an array of the elements in
 ##	the exclusion group of $elem content rule.
@@ -558,6 +594,7 @@ sub main'DTDget_exc_children {
     $elem =~ tr/A-Z/a-z/;
     return &extract_elem_names($ElemExc{$elem}, $andcon);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_gen_ents() returns an array of general entities.
 ##	An optional flag argument can be passed to the routine to
@@ -568,6 +605,7 @@ sub main'DTDget_gen_ents {
     local($nosort) = shift;
     return ($nosort ? @GenEntities : sort @GenEntities);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDget_gen_data_ents() returns an array of general data
 ##	entities defined in the DTD.  Data entities cover the
@@ -579,6 +617,7 @@ sub main'DTDget_gen_data_ents {
 	 keys %CDataEntity,		# CDATA
 	 keys %SDataEntity;		# SDATA
 }
+
 ##---------------------------------------------------------------------------
 sub main'DTDreset {
     %ParEntity 		= ();
@@ -607,6 +646,7 @@ sub main'DTDreset {
     %ElemExc 		= ();
     %ElemTag		= ();
     %Attribute		= ();
+    %ElemsOfAttr	= ();
 
     @ParEntities    	= ();
     @GenEntities    	= ();
@@ -622,10 +662,12 @@ sub main'DTDreset {
     $COMMENT_CALLBACK	= "";
     $PI_CALLBACK	= "";
 }
+
 ##---------------------------------------------------------------------------
                             ##---------------##
                             ## DTD Functions ##
                             ##---------------##
+
 ##---------------------------------------------------------------------------
 ##	compute_parents() generates the %Parents and %TopElement arrays.
 ##
@@ -661,18 +703,23 @@ sub compute_parents {
 ##	The parsing routines have a specific calling sequence.  Many
 ##	of the routines rely on other routines updating the current
 ##	parsed line.  Many of them pass the current line by reference.
+##	This may look ugly, but hey, it works.
 ##
 ##	See individual routine declaration for more information.
 ##---------------------------------------------------------------------------
 
+##  Constants to determine if data read should be processed.
 $IncMS	= 1;
 $IgnMS	= 2;
                             ##----------------##
                             ## Main Functions ##
                             ##----------------##
+
 ##---------------------------------------------------------------------------
 ##	DTDread_dtd() parses the contents of an open file specified by
-##	$handle.
+##	$handle.  A 1 is returned on successful parsing, and a 0
+##	is returned if failed.  The $include argument is for internal
+##	use and not meant for external routines.
 ##
 sub main'DTDread_dtd {
     local($handle, $include) = @_;
@@ -680,26 +727,34 @@ sub main'DTDread_dtd {
     local($oldslash) = $/;
     local($old) = select($handle);
 
-    $include = $IncMS unless $include;
-    return if $include == $IgnMS;		# Do nothing if ignoring
-    while (!eof($handle)) {
-        $/ = $mdo1char;
-        $line = <$handle>;              	# Read 'til first declaration
-        &find_ext_parm_ref(*line, $include)	# Read any external files
-	    if $include == $IncMS;
-        last if eof($handle);           	# Exit if EOF
-	$c = getc($handle);
-	if ($c eq $mdo2char) {
-	    &read_declaration($handle, $include);	# Read declaration
-	} elsif ($c eq $pio2char) {
-	    &read_procinst($handle, $include);		# Read processing inst.
-	} else {
-	    die "Unrecognized markup: $line$c\n";
+    ## Eval main loop to catch fatal errors
+    eval q{
+	$include = $IncMS unless $include;
+	return if $include == $IgnMS;		# Do nothing if ignoring
+	while (!eof($handle)) {
+	    $/ = $mdo1char;
+	    $line = <$handle>;              	# Read 'til first declaration
+	    &find_ext_parm_ref(*line, $include)	# Read any external files
+		if $include == $IncMS;
+	    last if eof($handle);           	# Exit if EOF
+	    $c = getc($handle);
+	    if ($c eq $mdo2char) {
+		&read_declaration($handle, $include);	# Read declaration
+	    } elsif ($c eq $pio2char) {
+		&read_procinst($handle, $include);	# Read processing inst.
+	    } else {
+		&errMsg("Unrecognized markup: $line$c\n");
+		die;
+	    }
 	}
-    }
+    }; # end eval
+
     select($old);				# Reset default filehandle
     $/ = $oldslash;				# Reset $/
+
+    $@ ? 0 : 1;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDread_catalog_files() reads all catalog entry files (aka map
 ##	files) specified by @files and by the SGML_CATALOG_FILES
@@ -727,15 +782,26 @@ sub main'DTDread_mapfile {
     $tmp = 0;
 
     ## Open file
-    if ($filename =~ /^\// || $filename =~ /^\w:\\/) {	# Absolute pathname
-	if (open(MAPFILE, "$_/$filename")) { $tmp = 1; }
+    if (($filename =~ /^\//) ||
+	($filename =~ /^\w:\\/)) {			# Absolute pathname
+
+	if (open(MAPFILE, $filename)) {
+	    $tmp = 1;
+	}
+
     } else {						# Search for file
 	foreach (@P_SGML_PATH) {
-	    if (open(MAPFILE, "$_/$filename")) { $tmp = 1; last; }
+	    if (open(MAPFILE, "${_}${dirsep}$filename")) {
+		$tmp = 1;
+		last;
+	    }
 	}
     }
-    warn "Unable to open entity map file: $filename\n", return
-	unless $tmp;
+
+    if (!$tmp) {
+	&errMsg("Unable to open entity map file: $filename\n");
+	return;
+    }
 
     while (<MAPFILE>) {
 	next if /^\s*$/ || /^\s*$como/o;	# Skip blank/comment lines
@@ -745,6 +811,7 @@ sub main'DTDread_mapfile {
 	s/^\s*(\S+)\s+//;  $type = $1;	# Get type of entry
 	s/\s+(\S+)\s*$//;  $sysid = $1;	# Get system id
 	    $sysid =~ s/^['"]//;  $sysid =~ s/['"]$//;
+	    $sysid =~ s/<[^>]*>//;	# Strip FSI markup
 	$id = $_;			# Now should have id left
 	    $id =~ s/^['"]//;  $id =~ s/['"]$//;
 	&zip_wspace(*id);		# Remove extra space
@@ -767,6 +834,7 @@ sub main'DTDread_mapfile {
     }
     close(MAPFILE);
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDset_comment_callback() sets the function to be called when an
 ##	SGML comment declaration is encountered.
@@ -778,6 +846,7 @@ sub main'DTDread_mapfile {
 sub main'DTDset_comment_callback {
     $COMMENT_CALLBACK = shift;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDset_verbosity() sets the verbosity flag.  Setting it to a
 ##	non-zero value cause DTDread_dtd() to output status messages
@@ -786,6 +855,7 @@ sub main'DTDset_comment_callback {
 sub main'DTDset_verbosity {
     $VERBOSE = shift;
 }
+
 ##---------------------------------------------------------------------------
 ##	DTDset_pi_callback() sets the function to be called when a
 ##	processing instruction is encountered.
@@ -797,10 +867,60 @@ sub main'DTDset_verbosity {
 sub main'DTDset_pi_callback {
     $PI_CALLBACK = shift;
 }
+
+##---------------------------------------------------------------------------
+##	DTDset_debug_callback() sets the debug callback to call when
+##	dtd.pl generates a debugging message.
+##
+##	Note: the function is called within the context of package dtd.
+##	      Therefore, one might have to prefix the function name
+##	      with the package name it is defined in.
+##
+sub main'DTDset_debug_callback {
+    $DebugCallback = shift;
+}
+
+##---------------------------------------------------------------------------
+##	DTDset_debug_handle() sets the debug filehandle where all
+##	debugging messages will go.
+##
+##	Note: the function is called within the context of package dtd.
+##	      Therefore, one might have to prefix the filehandle name
+##	      with the package name it is defined in.
+##
+sub main'DTDset_debug_handle {
+    $DebugHandle = shift;
+}
+
+##---------------------------------------------------------------------------
+##	DTDset_err_callback() sets the error callback to call when
+##	dtd.pl generates a error message.
+##
+##	Note: the function is called within the context of package dtd.
+##	      Therefore, one might have to prefix the function name
+##	      with the package name it is defined in.
+##
+sub main'DTDset_err_callback {
+    $ErrMsgCallback = shift;
+}
+
+##---------------------------------------------------------------------------
+##	DTDset_err_handle() sets the error filehandle where all
+##	error messages will go.
+##
+##	Note: the function is called within the context of package dtd.
+##	      Therefore, one might have to prefix the filehandle name
+##	      with the package name it is defined in.
+##
+sub main'DTDset_err_handle {
+    $ErrHandle = shift;
+}
+
 ##---------------------------------------------------------------------------
                             ##---------------##
                             ## DTD Functions ##
                             ##---------------##
+
 ##---------------------------------------------------------------------------
 ##	read_declaration() parses a declaration.  $include determines
 ##	if the declaration is to be included or ignored.
@@ -815,7 +935,7 @@ sub read_declaration {
     &read_comment($handle), return		# Comment declaration
 	if $c eq $comchar;
     &read_msection($handle, $include), return	# Marked section
-	if $c eq $mso_;
+	if $c eq $dso_;
 
     $func = $c;
     while ($c !~ /^\s*$/) {     # Get declaration type
@@ -857,6 +977,7 @@ sub read_declaration {
     }
     $/ = $d;				# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	read_procinst() reads in a processing instruction.
 ##
@@ -867,10 +988,10 @@ sub read_procinst {
 
     $/ = $pic_;			# Set slurp var to '>'
     $txt = <$handle>;		# Get pi text
-    print STDERR "Processing instruction: $id\n" if $VERBOSE;
+    &debugMsg("Processing instruction: $id\n");
     if ($include == $IncMS) {
-	if ($PI_CALLBACK) {	# Call pi callback if defined.
-	    print STDERR "\tInvoking $PI_CALLBACK\n" if $VERBOSE;
+	if (defined(&$PI_CALLBACK)) {	# Call pi callback if defined.
+	    &debugMsg("\tInvoking $PI_CALLBACK\n");
 
 	    for ($i=0; $i < length($/); $i++) {
 		chop $txt; }		# Remove close delimiter
@@ -879,6 +1000,7 @@ sub read_procinst {
     }
     $/ = $d;			# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	read_comment() slurps up a comment declaration.
 ##
@@ -888,7 +1010,7 @@ sub read_comment {
     local($txt, $i, $tmp);
     $txt = '';
 
-    print STDERR "Comment declaration\n" if $VERBOSE;
+    &debugMsg("Comment declaration\n");
     getc($handle);		# Read second comment character
     while (1) {			# Get comment text
 	$/ = $mdc_;		    		# Set slurp var to ">"
@@ -896,8 +1018,8 @@ sub read_comment {
 	$txt .= $tmp;
 	last if $tmp =~ /$comc\s*$mdc$/o;	# Check for close
     }
-    if ($COMMENT_CALLBACK) {	# Call comment callback if defined.
-	print STDERR "\tInvoking $COMMENT_CALLBACK\n" if $VERBOSE;
+    if (defined(&$COMMENT_CALLBACK)) {	# Call comment callback if defined.
+	&debugMsg("\tInvoking $COMMENT_CALLBACK\n");
 
 	$txt =~ s/^([\S\s]*)$comc\s*$mdc$/$1/o;	# Remove comment close
 	$txt = ' ' x length($mdo_ . $como_) . $txt;
@@ -905,6 +1027,7 @@ sub read_comment {
     }
     $/ = $d;			# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	read_doctype() parses a DOCTYPE declaration.  $include determines
 ##	if the declaration is to be included or ignored.
@@ -916,20 +1039,23 @@ sub read_doctype {
 
     ##	Should be processing one DOCTYPE at most.
     if ($DocType && $include) {
-	die "A second DOCTYPE declaration exists\n";
+	&errMsg("A second DOCTYPE declaration exists\n");
+	die;
     }
 
     $/ = $dso_;
     $line = <$handle>;                  # Get text before $dso
-    print STDERR "$DOCTYPE $line\n" if $VERBOSE;
+    $line =~ s/${dso}$//;		# Strip dso
+    &debugMsg("$DOCTYPE $line\n");
     if ($include) {
 	$dt = &get_next_group(*line);	# Get doctype name
 	($DocType = $dt) =~ tr/a-z/A-Z/;
     }
     &read_subset($handle, $include, $dsc_.$mdc_);
-    print STDERR "Finished $DOCTYPE\n" if $VERBOSE;
+    &debugMsg("Finished $DOCTYPE\n");
     $/ = $d;				# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	read_linktype() parses a LINKTYPE declaration.  $include determines
 ##	if the declaration is to be included or ignored.
@@ -942,10 +1068,11 @@ sub read_linktype {
     $/ = $dso_;
     $line = <$handle>;                  # Get text before $dso
     &expand_entities(*line);
-    warn "$LINKTYPE declaration ignored\n";
+    &errMsg("$LINKTYPE declaration ignored\n");
     &read_subset($handle, $IgnMS, $dsc_.$mdc_);
     $/ = $d;				# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	read_msection() parses marked section.  $include determines
 ##	if the section is to be included or ignored.
@@ -958,20 +1085,25 @@ sub read_msection {
     $/ = $dso_;
     $line = <$handle>;                  # Get status keyword
     &expand_entities(*line);
-    print STDERR "Begin Marked Section: $line\n" if $VERBOSE;
+    &debugMsg("Begin Marked Section: $line\n");
 
     if ($line =~ /$RCDATA/io || $line =~ /$CDATA/io) {	# Ignore (R)CDATA
 	&slurp_msection($handle);
+
     } elsif ($line =~ /$IGNORE/io) {			# Check for IGNORE
-	$include = $IgnMS;
-	&read_subset($handle, $include, $msc_.$mdc_);
+	&ignore_msection($handle);
+
+	# $include = $IgnMS;
+	# &read_subset($handle, $include, $msc_.$mdc_);
+
     } else {
 	&read_subset($handle, $include, $msc_.$mdc_);
     }
 
-    print STDERR "End Marked Section\n" if $VERBOSE;
+    &debugMsg("End Marked Section\n");
     $/ = $d;				# Reset slurp var
 }
+
 ##---------------------------------------------------------------------------
 ##	slurp_msection() skips past a marked section that cannot include
 ##	nested marked sections.  This routine is used when RCDATA or
@@ -980,10 +1112,32 @@ sub read_msection {
 sub slurp_msection {
     local($handle) = @_;
     local($d) = $/;
-    $/ = $msc_;  <$handle>;
-    $/ = $mdc_;  <$handle>;
+    $/ = "${msc_}${mdc_}";
+    <$handle>;
     $/ = $d;				# Reset slurp var
 }
+
+##---------------------------------------------------------------------------
+##	ignore_msection() skips past an ignore marked section.  A
+##	check is made for nested marked sections to properly terminate
+##	the ignored section.
+##
+sub ignore_msection {
+    local($handle) = @_;
+    local($d) = $/;
+    local($opencnt) = (1);		# Initial open already read
+    local($igtxt) = ('');
+
+    while (($opencnt > 0) && !eof($handle)) {
+	$/ = "${msc_}${mdc_}";
+	$igtxt = <$handle>;
+	$opencnt += ($igtxt =~ s/${mdo}${dso}//go);
+	$opencnt--;
+    }
+
+    $/ = $d;				# Reset slurp var
+}
+
 ##---------------------------------------------------------------------------
 ##	read_subset() parses a subset section.  $include determines
 ##	if the subset is included or ignored.  $endseq signifies the
@@ -994,7 +1148,7 @@ sub read_subset {
     local($c, $i, $line);
     local(@chars) = split(//, $endseq);
 
-    print STDERR "Begin Subset\n" if $VERBOSE;
+    &debugMsg("Begin Subset\n");
     while (1) {
         $c = getc($handle);  next if $c =~ /^\s$/;
         if ($c eq $mdo1char) {     	# declaration statement
@@ -1015,7 +1169,7 @@ sub read_subset {
 		else { last; }
 	    }
 	    if ($i > $#chars) {
-		print STDERR "End Subset\n" if $VERBOSE;
+		&debugMsg("End Subset\n");
 		return;
 	    }
         }
@@ -1034,6 +1188,7 @@ sub read_subset {
         }
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	find_ext_parm_ref() evaulates in external parameter entity
 ##	references in *line.  $include is the INCLUDE/IGNORE flag
@@ -1051,6 +1206,7 @@ sub find_ext_parm_ref {
         }
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	subset_error() prints out a terse error message and dies.  This
 ##	routine is called if there is a syntax error in a subset section.
@@ -1060,10 +1216,12 @@ sub find_ext_parm_ref {
 ##
 sub subset_error {
     local($c, $hint) = @_;
-    die "Syntax error in subset.\n",
-        qq|\tUnexpected character: "$c", ascii code=|, ord($c), ".\n",
-	($hint ? "    Reason:\n\t$hint\n" : "\n");
+    &errMsg("Syntax error in subset.\n",
+	    qq|\tUnexpected character: "$c", ascii code=|, ord($c), ".\n",
+	    ($hint ? "    Reason:\n\t$hint\n" : "\n"));
+    die;
 }
+
 ##---------------------------------------------------------------------------
 sub do_attlist {
     local(*line) = @_;
@@ -1073,10 +1231,10 @@ sub do_attlist {
     &expand_entities(*line);
     $tmp = &get_next_group(*line);	 	# Get element name(s)
     if ($tmp =~ /^\s*$rni$NOTATION\s*$/io) {	# Check for #NOTATION
-	warn "$ATTLIST $rni$NOTATION skipped\n";
+	&errMsg("$ATTLIST $rni$NOTATION skipped\n");
 	return;
     }
-    print STDERR "$ATTLIST: $tmp\n" if $VERBOSE;
+    &debugMsg("$ATTLIST: $tmp\n");
     $tmp =~ s/($grpo|$grpc|\s+)//go;
     $tmp =~ tr/A-Z/a-z/;		 # Convert all names to lowercase
     @names = split(/[$or$and$seq\s]+/o, $tmp);
@@ -1105,6 +1263,8 @@ sub do_attlist {
 	    $attr{$attname} = join($;, $attdef, @array);
 	}
     }
+
+    ##	Store attribute information for each element
     foreach (@names) {
 	$tmp = $_;			# Store original name
 	s/-/X/g;			# Protect from creating illegal
@@ -1116,7 +1276,17 @@ sub do_attlist {
 	eval "%${_}_attr = %attr";	# Create assoc array for values
 	$Attribute{$tmp} = "${_}_attr"; # Store name of assoc
     }
+
+    ##	Create mapping of attribute name to element
+    foreach (keys %attr) {
+	if ($ElemsOfAttr{$_}) {
+	    $ElemsOfAttr{$_} .= $; . $_;
+	} else {
+	    $ElemsOfAttr{$_}  = $_;
+	}
+    }
 }
+
 ##---------------------------------------------------------------------------
 sub do_element {
     local(*line) = @_;
@@ -1125,7 +1295,7 @@ sub do_element {
 
     &expand_entities(*line);
     $tmp = &get_next_group(*line);	 # Get element name(s)
-    print STDERR "$ELEMENT: $tmp\n" if $VERBOSE;
+    &debugMsg("$ELEMENT: $tmp\n");
     $tmp =~ s/[$grpo$grpc\s]//go;
     $tmp =~ tr/A-Z/a-z/;		 # Convert all names to lowercase
     @names = split(/[$or$and$seq\s]+/o, $tmp);
@@ -1151,8 +1321,8 @@ sub do_element {
 
     foreach (@names) {			# Store element information
 	if (defined($ElemCont{$_})) {
-	    warn "Duplicate element declaration: $_\n"; }
-	else {
+	    &errMsg("Duplicate element declaration: $_\n");
+	} else {
 	    $ElemCont{$_} = $elcont;
 	    $ElemInc{$_} = $elinc;
 	    $ElemExc{$_} = $elexc;
@@ -1161,6 +1331,7 @@ sub do_element {
 	}
     }
 }
+
 ##---------------------------------------------------------------------------
 sub do_entity {
     local(*line) = @_;
@@ -1168,13 +1339,14 @@ sub do_entity {
     if ($line =~ /^\s*$pero/o) { &do_parm_entity(*line); }
     else { &do_gen_entity(*line); }
 }
+
 ##---------------------------------------------------------------------------
 sub do_notation {
     local(*line) = @_;
     local($name);
 
     $name = &get_next_group(*line);
-    print STDERR "$NOTATION $name\n" if $VERBOSE;
+    &debugMsg("$NOTATION $name\n");
 
     if ($line =~ s/^$SYSTEM\s+//io) {		# SYSTEM notation
 	$SysNotation{$name} = &get_next_group(*line)
@@ -1185,16 +1357,19 @@ sub do_notation {
 	    unless defined($PubNotation{$name});
     }
 }
+
 ##---------------------------------------------------------------------------
 sub do_shortref {
     local(*line) = @_;
-    warn "$SHORTREF declaration ignored\n";
+    &errMsg("$SHORTREF declaration ignored\n");
 }
+
 ##---------------------------------------------------------------------------
 sub do_usemap {
     local(*line) = @_;
-    warn "$USEMAP declaration ignored\n";
+    &errMsg("$USEMAP declaration ignored\n");
 }
+
 ##---------------------------------------------------------------------------
 ##      del_comments() removes any inline comments from *line.
 ##      Unfortuneatly, this routines needs knowledge of the comment
@@ -1205,6 +1380,7 @@ sub del_comments {
     local(*line) = @_;
     $line =~ s/$como([^-]|-[^-])*$comc//go;
 }
+
 ##---------------------------------------------------------------------------
 ##	expand_entities() expands all entity references in *line.
 ##
@@ -1217,6 +1393,7 @@ sub expand_entities {
 	&expand_char_entities(*line);
     };
 }
+
 ##---------------------------------------------------------------------------
 ##	expand_parm_entities() expands all parameter entity references
 ##	in *line.
@@ -1225,12 +1402,13 @@ sub expand_parm_entities {
     local(*line) = @_;
 
     while ($line =~ s/$pero([$namechars]+)$refc?/$ParEntity{$1}/) {
-	warn qq|Parameter entity "$1" not defined.  |,
-	     qq|May cause parsing errors.\n|
+	&errMsg(qq|Parameter entity "$1" not defined.  |,
+	        qq|May cause parsing errors.\n|)
 	    unless defined($ParEntity{$1});
 	&del_comments(*line);
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	expand_gen_entities() expands all general entity references
 ##	in *line.
@@ -1239,11 +1417,12 @@ sub expand_gen_entities {
     local(*line) = @_;
 
     while ($line =~ s/$ero([$namechars]+)$refc?/$_AGE{$1}/) {
-	warn qq|Entity "$1" not defined.  May cause parsing errors.\n|
+	&errMsg(qq|Entity "$1" not defined.  May cause parsing errors.\n|)
 	    unless defined($_AGE{$1});
 	&del_comments(*line);
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	expand_char_entities() expands all character entity references
 ##	in *line.
@@ -1252,11 +1431,12 @@ sub expand_char_entities {
     local(*line) = @_;
 
     while ($line =~ s/$cro([$namechars]+)$refc?/$CharEntity{$1}/) {
-	warn qq|Character entity "$1" not recognized.  |,
-	     qq|May cause parsing errors.\n|
+	&errMsg(qq|Character entity "$1" not recognized.  |,
+	        qq|May cause parsing errors.\n|)
 	    unless defined($CharEntity{$1});
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	extract_elem_names() extracts just the element names of $str.
 ##	An array is returned.  The elements in $str are assumed to be
@@ -1283,24 +1463,34 @@ sub extract_elem_names {
     }
     grep($_ ne '', @ret_a);		# Strip out null items
 }
+
 ##---------------------------------------------------------------------------
 ##	open_ext_entity() opens the external entity file $filename.
 ##
 sub open_ext_entity {
     local($filename) = @_;
-    local($ret);
+    local($ret, $openname) = ('', '');
     local($fname) = ('EXTENT' . $extentcnt++);
 
-    foreach (@P_SGML_PATH) {
-	if (open($fname, "$_/$filename")) {
-	    print STDERR "Opening $_/$filename for reading\n" if $VERBOSE;
+    if (($filename =~ /^\//) || ($filename =~ /^\w:\\/)) {
+	if (open($fname, $filename)) {
+	    &debugMsg("Opening $filename for reading\n");
 	    $ret = $fname;
-	    last;
+	}
+    } else {
+	foreach (@P_SGML_PATH) {
+	    $openname = "${_}${dirsep}$filename";
+	    if (open($fname, $openname)) {
+		&debugMsg("Opening $openname for reading\n");
+		$ret = $fname;
+		last;
+	    }
 	}
     }
-    warn "Unable to open $filename\n" unless $ret;
+    &errMsg("Unable to open $filename\n") unless $ret;
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	resolve_ext_entity_ref() translates an external entity to
 ##	its corresponding filename.  The entity identifier is checked
@@ -1320,10 +1510,11 @@ sub resolve_ext_entity_ref {
 	last EREFSW if ($aa = $SysNDEntity{$ent});
 	last EREFSW if ($aa = $SysSDEntity{$ent});
 	last EREFSW if ($aa = $SysSubDEntity{$ent});
-	warn "Entity referenced, but not defined: $ent\n", return "";
+	&errMsg("Entity referenced, but not defined: $ent\n"), return "";
     }
     &entity_to_sys($ent, $aa);
 }
+
 ##---------------------------------------------------------------------------
 ##	entity_to_sys() maps an external entity to a system identifier.
 ##	How the map is resolved:
@@ -1342,6 +1533,7 @@ sub entity_to_sys {
     $ExtParmEnt2SysId{$ent} || $ExtGenEnt2SysId{$ent} ||
     $id || $ent;
 }
+
 ##---------------------------------------------------------------------------
 ##	do_parm_entity() parses a parameter entity definition.
 ##
@@ -1351,7 +1543,7 @@ sub do_parm_entity {
 
     $line =~ s/^\s*$pero?\s+//o;	  # Remove pero, '%'
     $line =~ s/^(\S+)\s+//; $name = $1;   # Get entity name
-    print STDERR "$ENTITY $pero_ $name\n" if $VERBOSE;
+    &debugMsg("$ENTITY $pero_ $name\n");
 
     if ($line =~ s/^$PUBLIC\s+//io) {	  	# PUBLIC external parm entity
 	$PubParEntity{$name} = &get_next_group(*line)
@@ -1368,6 +1560,7 @@ sub do_parm_entity {
 	}
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	do_gen_entity() parses a general entity definition.
 ##
@@ -1376,7 +1569,7 @@ sub do_gen_entity {
     local($name, $tmp);
 
     $line =~ s/^\s*(\S+)\s+//; $name = $1;   # Get entity name
-    print STDERR "$ENTITY $name\n" if $VERBOSE;
+    &debugMsg("$ENTITY $name\n");
     $tmp = &get_next_group(*line);
     GENSW: {
 	&do_ge_starttag($name, *line), last GENSW
@@ -1401,6 +1594,7 @@ sub do_gen_entity {
     }
     push(@GenEntities, $name);
 }
+
 ##---------------------------------------------------------------------------
 sub do_ge_starttag {
     local($name, *line) = @_;
@@ -1409,7 +1603,7 @@ sub do_ge_starttag {
     $tmp = &get_next_group(*line);
     $StartTagEntity{$name} = $tmp;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_endtag {
     local($name, *line) = @_;
     local($tmp);
@@ -1417,16 +1611,16 @@ sub do_ge_endtag {
     $tmp = &get_next_group(*line);
     $EndTagEntity{$name} = $tmp;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_ms {
     local($name, *line) = @_;
     local($tmp);
 
     $tmp = &get_next_group(*line);
     $MSEntity{$name} = $tmp;
-    $_AGE{$name} = $mdo_ . $mso_ . $tmp . $msc_ . $mdc_;
+    $_AGE{$name} = $mdo_ . $dso_ . $tmp . $msc_ . $mdc_;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_md {
     local($name, *line) = @_;
     local($tmp);
@@ -1435,7 +1629,7 @@ sub do_ge_md {
     $MDEntity{$name} = $tmp;
     $_AGE{$name} = $mdo_ . $tmp . $mdc_;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_pi {
     local($name, *line) = @_;
     local($tmp);
@@ -1444,7 +1638,7 @@ sub do_ge_pi {
     $PIEntity{$name} = $tmp;
     $_AGE{$name} = $pio_ . $tmp . $pic_;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_cdata {
     local($name, *line) = @_;
     local($tmp);
@@ -1452,7 +1646,7 @@ sub do_ge_cdata {
     $tmp = &get_next_group(*line);
     $CDataEntity{$name} = $tmp;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_sdata {
     local($name, *line) = @_;
     local($tmp);
@@ -1460,16 +1654,17 @@ sub do_ge_sdata {
     $tmp = &get_next_group(*line);
     $SDataEntity{$name} = $tmp;
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_public {
     local($name, *line) = @_;
-    warn "General $PUBLIC entity skipped\n";
+    &errMsg("General $PUBLIC entity skipped\n");
 }
-##---------------------------------------------------------------------------
+
 sub do_ge_system {
     local($name, *line) = @_;
-    warn "General $SYSTEM entity skipped\n";
+    &errMsg("General $SYSTEM entity skipped\n");
 }
+
 ##---------------------------------------------------------------------------
 ##	get_inc() gets the inclusion element group of an element
 ##	definition.
@@ -1481,6 +1676,7 @@ sub get_inc {
     $ret = &get_next_group(*line);
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	get_exc() gets the exclusion element group of an element
 ##	definition.
@@ -1492,6 +1688,7 @@ sub get_exc {
     $ret = &get_next_group(*line);
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	get_next_group gets the next group from a declaration.
 ##
@@ -1520,6 +1717,7 @@ sub get_next_group {
     &zip_wspace(*ret);
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	get_next_string() gets the next string from *line.  This
 ##	function is used by the do*entity routines.
@@ -1533,6 +1731,7 @@ sub get_next_string {
     &zip_wspace(*ret);
     $ret;
 }
+
 ##---------------------------------------------------------------------------
 ##	is_quote_char() checks to see if $char is a quote character.
 ##
@@ -1540,6 +1739,33 @@ sub is_quote_char {
     local($char) = @_;
     $char =~ /[$quotes]/o;
 }
+
+##---------------------------------------------------------------------------
+##	debugMsg() either calls registered error message callback or
+##	prints list to error filehandle when verbosity is set.
+##
+sub debugMsg {
+    if ($VERBOSE) {
+	if (defined(&$DebugCallback)) {
+	    &$DebugCallback(@_);
+	} else {
+	    print($DebugHandle  @_);
+	}
+    }
+}
+
+##---------------------------------------------------------------------------
+##	errMsg() either calls registered error message callback, or
+##	prints list to error filehandle.
+##
+sub errMsg {
+    if (defined(&$ErrMsgCallback)) {
+	&$ErrMsgCallback(@_);
+    } else {
+	print($ErrHandle  @_);
+    }
+}
+
 ##---------------------------------------------------------------------------
 ##      zip_wspace() takes a pointer to a string and strips all beginning
 ##      and ending whitespaces.  It also compresses all other whitespaces
@@ -1550,6 +1776,7 @@ sub zip_wspace {
     $str =~ s/^\s*(.*[^\s])\s*$/$1/;
     $str =~ s/\s{2,}/ /g;
 }
+
 ##---------------------------------------------------------------------------
 ##      quote_chars() escapes special characters in case passed in string
 ##      will get be used in a pattern matching statement.  This prevents
@@ -1561,11 +1788,13 @@ sub quote_chars {
     local(*str) = @_;
     $str =~ s/(\W)/\\$1/g;
 }
+
 ##---------------------------------------------------------------------------
 sub unquote_chars {
     local(*str) = @_;
     $str =~ s/\\//g;
 }
+
 ##---------------------------------------------------------------------------
 
 ##***************************************************************************##
@@ -1605,10 +1834,12 @@ sub main'DTDprint_tree {
     %inc = (); %exc = ();
     &print_sub_tree($elem, 2, *inc, *exc, *done); # Print tree
 }
+
 ##---------------------------------------------------------------------------
 			    ##---------------##
 			    ## DTD Functions ##
 			    ##---------------##
+
 ##---------------------------------------------------------------------------
 ##	compute_levels() is the first pass over the element content
 ##	hierarchy.  It determines the highest level each element occurs
@@ -1653,6 +1884,7 @@ sub compute_levels {
     ## Remove exclude elements ##
     foreach (@excarray) { $exc{$_}--; }
 }
+
 ##---------------------------------------------------------------------------
 ##	print_sub_tree() is the second pass of an element content
 ##	hierarchy.  It actually prints the tree, and it uses the
@@ -1725,6 +1957,7 @@ sub print_sub_tree {
     ## Remove exclude elements ##
     foreach (@excarray) { $exc{$_}--; }
 }
+
 ##---------------------------------------------------------------------------
 ##	print_elem() is used by print_sub_tree() to output the elements
 ##	in a structured format to $TREEFILE.
@@ -1744,6 +1977,7 @@ sub print_elem {
 	print($TREEFILE $indent, $elem, "\n");
     }
 }
+
 ##---------------------------------------------------------------------------
 ##	remove_dups() removes duplicate elements in *array.
 sub remove_dups {
