@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------## ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.6 1996/11/12 14:40:37 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.7 1996/12/04 15:28:48 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -786,8 +786,8 @@ sub main'DTDread_mapfile {
     $tmp = 0;
 
     ## Open file
-    if (($filename =~ /^\//) ||
-	($filename =~ /^\w:\\/)) {			# Absolute pathname
+    if (($filename =~ m%^/%) ||
+	($filename =~ m%^(\w:)?[\\/]%) ) {		# Absolute pathname
 
 	if (open(MAPFILE, $filename)) {
 	    $tmp = 1;
@@ -1537,7 +1537,7 @@ sub open_ext_entity {
     local($ret, $openname) = ('', '');
     local($fname) = ('EXTENT' . $extentcnt++);
 
-    if (($filename =~ /^\//) || ($filename =~ /^\w:\\/)) {
+    if (($filename =~ /^\//) || ($filename =~ m%^(\w:)?[\\/]%)) {
 	if (open($fname, $filename)) {
 	    &debugMsg("Opening $filename for reading\n");
 	    $ret = $fname;
