@@ -1,13 +1,13 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: DTD.pm,v 1.4 1996/12/02 13:06:01 ehood Exp $ %Z%
+##      %Z% %Y% $Id: DTD.pm,v 1.5 1997/08/27 21:01:15 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
 ##      This file defines the SGML::DTD class.  Class is used for
 ##	parsing and analyzing DTDs.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ use Exporter ();
 @EXPORT = ();
 @EXPORT_OK = ();
 %EXPORT_TAGS = ();
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 ##---------------------------------------------------------------------------##
 ##  Object methods
@@ -69,8 +69,6 @@ $VERSION = "0.01";
 ##	is_tag_name		=> Check for legal tag name.
 ##	print_tree		=> Output content tree for an element
 ##	read_dtd 		=> Parse a SGML dtd
-##	read_catalog_files	=> Parse a set of entity map files
-##	read_mapfile		=> Parse entity map file
 ##	reset   		=> Reset all internal data for DTD
 ## 
 ##  Class methods
@@ -137,10 +135,8 @@ $PrTreeEntry = \&pr_tree_entry;
 			# Print tree entry callback
 
 ##  Constants to determine if data read should be processed.
-$IncMS  	= 1;
-$IgnMS  	= 2;
-
-$extentcnt	= 0;	# Used to create unique filehandles 
+*IncMS  	= \1;
+*IgnMS  	= \2;
 
 ##***************************************************************************##
 ##			       PUBLIC METHODS				     ##
@@ -1851,3 +1847,523 @@ sub pr_tree_entry {
 
 ##---------------------------------------------------------------------------##
 1;
+
+__END__
+
+=head1 NAME
+
+SGML::DTD - SGML DTD parser
+
+=head1 SYNOPSIS
+
+  use SGML::DTD;
+  
+  $dtd = new SGML::DTD;
+  $dtd->read_dtd(\*FILEHANDLE);
+  
+  $dtd = new SGML::DTD \*FILEHANDLE;
+  
+  SGML::DTD->set_ent_manager($entity_manager);
+  $dtd = new SGML::DTD;
+  $dtd->read_dtd(\*FILEHANDLE);
+  
+  $dtd = new SGML::DTD \*FILEHANDLE, $entity_manager;
+
+=head1 DESCRIPTION
+
+B<SGML::DTD> is an SGML DTD parser.  Either during object construction
+or by the B<read_dtd> method, you pass a filehandle to B<SGML::DTD>
+that contains the DTD you want parsed.  To avoid package scoping
+problems, a reference to a filehandle should be passed.  If passing
+a filehandle to object construction, C<undef> will be returned if a
+parsing error occurs.  If using the B<read_dtd> method, 1 is returned
+when no errors occurred; 0 returned on an error.
+
+When parsing the DTD, B<SGML::DTD> builds up data structures
+that represent the information contained in the DTD.  Various
+methods are provided to access DTD information.  See
+L<OBJECT METHODS> for the methods available.
+
+For B<SGML::DTD> to resolve external entity references,
+B<SGML::DTD> uses an B<SGML::EntMan> object.  If no entity manager
+is passed to B<SGML::DTD>, B<SGML::DTD> uses the default construction
+rule of B<SGML::EntMan> to create an entity manager to resolve
+external entity references.  Normally, this will not be sufficient.
+Therefore, B<SGML::EntMan> object should be created first with loaded
+DTD specific catalogs.  Then instantiate an B<SGML::DTD>
+object and pass the B<SGML::EntMan> object to it.  The B<SGML::EntMan>
+object can be specified during B<SGML::DTD> construction, or
+by the B<set_ent_manager> class method.
+
+The following describes the current limitations of B<SGML::DTD>:
+
+=over 4
+
+=item *
+
+Concurrent DTDs are not distinguished.  However, multiple
+B<SGML::DTD> instances can be created by a program.  Also,
+if the input contains a DOCTYPE declaration, B<SGML::DTD> will
+terminate parsing at the close of the DOCTYPE declaration.  Therefore,
+another B<SGML::DTD> instance can be creating if another DOCTYPE
+declaration is in the input stream.
+
+=item *
+
+LINKTYPE, SHORTREF, USEMAP declarations are ignored.
+
+=item *
+
+Rank element declarations are not supported.
+
+=item *
+
+B<SGML::DTD> assumes the reference concrete syntax with the
+following exceptions: generic identifiers and entity names
+can be of any length and include the 'C<_>' character.  Variant
+syntaxes can be supported by modifying variable definitions
+in the B<SGML::Syntax> module.
+
+=item *
+
+B<SGML::DTD> is not designed to be a DTD syntax validator.
+When a parsing error occurs, parsing is terminated and
+the error message is not very descriptive.  For validation,
+a program like B<nsgmls> should be used.
+
+=item *
+
+The entity manager is shared across all B<SGML::DTD> instances.
+This can be a problem if there is a desire to have multiple
+B<SGML::DTD> instances and the DTDs have same external identifiers, but
+should resolve to different system identifiers.  This can be
+handled by changing the entity manager before parsing each DTD.
+
+=item *
+
+Element names are treated with case-insensitivity, but entity
+names are case-sensitive.
+
+=back
+
+=head1 CLASS METHODS
+
+Class methods are methods that apply at the class level.  Therefore,
+they may affect all instances of the B<SGML::DTD> class.  Class methods
+can be invoked like the following:
+
+    SGML::DTD->set_ent_manager($entman);
+
+or,
+
+    set_ent_manager SGML::DTD $entman;
+
+The following class methods are defined:
+
+=over 4
+
+=item B<new> SGML::DTD
+
+=item B<new> SGML::DTD \*I<FILEHANDLE>
+
+=item B<new> SGML::DTD \*I<FILEHANDLE>, I<$entman>
+
+B<new> creates a new B<SGML::DTD> object.  An optional filehandle
+argument can be specified to cause B<new> to automatically parse
+the DTD represented by the filehandle.  If a filehandle is specified,
+and optional B<SGML::EntMan> object may be specified for resolving
+any external entity references.
+
+=item B<is_attr_keyword> SGML::DTD I<$word>
+
+B<is_attr_keyword> returns 1 if I<$word> is an attribute content
+reserved value, otherwise, it returns 0. In the reference concrete
+syntax, the following values of I<$word> will return 1: C<CDATA>,
+C<ENTITY>, C<ENTITIES>, C<ID>, C<IDREF>, C<IDREFS>, C<NAME>,
+C<NAMES>, C<NMTOKEN>, C<NMTOKENS>, C<NOTATION>, C<NUMBER>, C<NUMBERS>,
+C<NUTOKEN>, C<NUTOKENS>.  Character case is ignored.
+
+=item B<is_elem_keyword> SGML::DTD I<$word>
+
+B<is_elem_keyword> returns 1 if $word is an element content reserved
+value, otherwise, it returns 0. In the reference concrete syntax,
+the following values of $word will return 1: C<#PCDATA>, C<CDATA>,
+C<EMPTY>, C<RCDATA>.  Character case is ignored.
+
+=item B<is_group_connector> SGML::DTD I<$char>
+
+DTDis_group_connector returns 1 if $char is an group connector,
+otherwise, it returns 0. The following values of $char will return 1:
+'C<,>', 'C<&>', 'C<|>'.
+
+=item B<is_occur_indicator> SGML::DTD I<$char>
+
+DTDis_occur_indicator returns 1 if $char is an occurence indicator,
+otherwise, it returns 0. The following values of $char will return 1:
+'C<+>, 'C<?>, 'C<*>.
+
+=item B<is_tag_name> SGML::DTD I<$string>
+
+B<is_tag_name> returns 1 if I<$string> is a legal tag name, otherwise,
+it returns 0. Legal characters in a tag name are defined by the
+B<SGML::Syntax::$namechars> variable. By default, a tag name may only
+contain the characters "C<A-Za-z_.->".
+
+=item B<set_comment_callback> SGML::DTD I<$coderef>
+
+Set a function to be called during parsing when a comment declaration
+is encountered.  The comment callback function is invoked as follows:
+
+    &$coderef(\$comment_txt);
+
+=item B<set_debug_callback> SGML::DTD I<$coderef>
+
+Set a function to be called when a debugging message is generated.
+The debug callback function is invoked as follows:
+
+    &$coderef(@string_list);
+
+Debugging messages are only generated if verbosity is set to true.
+
+=item B<set_debug_handle> SGML::DTD \*I<FILEHANDLE>
+
+Set the filehandle to send debugging messages.  Messages are
+not sent to the filehandle if a debug callback function is registered.
+The default filehandle is C<STDERR>.
+
+=item B<set_ent_manager> SGML::DTD I<$entman>
+
+Set the entity manager.  The entity manager will be used to resolve
+any external identifiers during parsing.  The entity manager should
+be of type B<SGML::EntMan>.
+
+=item B<set_err_callback> SGML::DTD I<$coderef>
+
+Set a function to be called during parsing when an error occurs
+The error callback function is invoked as follows:
+
+    &$coderef(@string_list);
+
+=item B<set_err_handle> SGML::DTD \*I<FILEHANDLE>
+
+Set the filehandle to send error messages.  Messages are
+not sent to the filehandle if an error callback function is registered.
+The default filehandle is C<STDERR>.
+
+=item B<set_pi_callback> SGML::DTD I<$coderef>
+
+Set a function to be called during parsing when a processing instruction
+is encountered.  The pi callback function is invoked as follows:
+
+    &$coderef(\$pi_txt);
+
+=item B<set_tree_callback> SGML::DTD I<$coderef>
+
+Set callback for printing a tree entry when the B<print_tree> object
+method is invoked.
+The tree entry callback function is invoked as follows:
+
+    &$coderef($iselem_flag, $string);
+
+This method allows you to modify the text output of the B<print_tree>
+method.  However, it does require some understanding of the string
+passed into callback to do anything interesting with it.  The method
+mainly exists for the use for a specific application, so its use
+is discouraged.
+
+=item B<set_verbosity> SGML::DTD I<$boolean>
+
+The tells if B<SGML::DTD> should output debugging messages as it
+parses a DTD.
+
+=back
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item $dtd->B<read_dtd>(\*I<FILEHANDLE>)
+
+Parse a DTD from I<FILEHANDLE>.
+
+=back
+
+The following methods are applicable after a DTD has been parsed:
+
+=over 4
+
+=item @list = $dtd->B<get_base_children>(I<$element>, I<$andcon>)
+
+B<get_base_children> returns an array of the elements in the base
+model group of I<$element>. The I<$andcon> is flag if the connector
+characters are included in the returned array: 0 => no connectors, 1
+(non-zero) => connectors.
+
+Example:
+
+    <!ELEMENT foo (x | y | z) +(a | b) -(m | n)>
+
+The call
+
+    $dtd->B<get_base_children>(`foo')
+
+will return
+
+    ('x', 'y', 'z')
+
+The call
+
+    $dtd->B<get_base_children>('foo', 1)
+
+will return
+
+    ('(','x', '|', 'y', '|', 'z', ')')
+
+=item %attributes = $dtd->B<get_elem_attr>(I<$element>)
+
+Retrieve the attributes defined for I<$element>.  The return value
+is a hash where the keys are the attribute names, and the values is
+the definitions of the attributes.  The definitions are stored as
+a list.  The first list value the default value for the attribute
+(which may be an SGML reserved word). If the default value equals
+"C<#FIXED>", then the next array value is the C<#FIXED> value.
+The other array values are all possible values for the attribute.
+
+=item @elements = $dtd->B<get_elements>(I<$nosort>)
+
+Retrieve all elements defined in the DTD.  If I<$nosort> is true,
+the elements are returned in the order they were defined in the
+DTD.  Otherwise, they are in sorted order.
+
+=item @elements = $dtd->B<get_elements_of_attr>(I<$attr_name>)
+
+Retrieve all elements that have an attribute I<$attr_name> defined
+in the DTD.
+
+=item @list = $dtd->B<get_exc_children>(I<$element>, I<$andcon>)
+
+B<get_exc_children> returns an array of the elements in the exclusion
+model group of I<$element>. The I<$andcon> is flag if the connector
+characters are included in the returned array: 0 => no connectors, 1
+(non-zero) => connectors.
+
+Example:
+
+    <!ELEMENT foo (x | y | z) +(a | b) -(m | n)>
+
+The call
+
+    $dtd->B<get_exc_children>('foo')
+
+will return
+
+    ('m', 'n')
+
+=item @entity_names = $dtd->B<get_gen_ents>(I<$nosort>)
+
+B<get_gen_ents> returns an array of general entities. An optional flag
+argument can be passed to the routine to determine is elements
+returned are sorted or not: 0 => sorted, 1 => not sorted.
+
+=item @entity_names = dtd->B<get_gen_data_ents>()
+
+B<get_gen_data_ents> returns an array of general data entities defined
+in the DTD.  Data entities cover the following:
+C<PCDATA>, C<CDATA>, C<SDATA>, C<PI>.
+
+=item @list = $dtd->B<get_inc_children>(I<$element>, I<$andcon>)
+
+B<get_inc_children> returns an array of the elements in the inclusion
+model group of I<$element>. The I<$andcon> is flag if the connector
+characters are included in the returned array: 0 => no connectors, 1
+(non-zero) => connectors.
+
+Example:
+
+    <!ELEMENT foo (x | y | z) +(a | b) -(m | n)>
+
+The call
+
+    $dtd->B<get_inc_children>('foo')
+
+will return
+
+    ('a', 'b')
+
+=item $dtd->B<get_parents>(I<$element>)
+
+Get all elements that may be a parent of I<$element>.
+
+=item @elements = $dtd->B<get_top_elements>()
+
+Get the top-most elements defined in the DTD. Top-most elements are
+those elements that cannot be contained within another element or
+can only be contained within itself.
+
+=item $dtd->B<is_child>(I<$element>, I<$child>)
+
+B<is_child> returns 1 if I<$child> can be a legal child of I<$element>.
+Otherwise, 0 is returned.
+
+=item $dtd->B<is_element>(I<$element>)
+
+B<is_element> returns 1 if I<$element> is defined in the DTD. Otherwise,
+0 is returned.
+
+=item $dtd->B<print_tree>(I<$element>, I<$depth>, \*I<FILEHANDLE>)
+
+B<print_tree> outputs an ASCII tree structure of I<$element>'s content
+hierarchy to a depth of I<$depth> to I<FILEHANDLE>.  See
+L<ELEMENT TREES> for information on output created by B<print_tree>.
+
+=item $dtd->B<reset>()
+
+Clear object data structures.  Use this method if you want
+to use the same object to parse another DTD.
+
+=back
+
+=head1 ELEMENT TREES
+
+Once a DTD is parsed, the B<print_tree> method can be used to
+output ASCII formatted trees of content hierarchies of elements.
+The B<print_tree> method is invoked as follows:
+
+    $dtd->B<print_tree>(I<$element>, I<$depth>, \*I<FILEHANDLE>)
+
+I<$element> is the element to print the tree for.  I<$depth> specifies
+the maximum depth of the tree.  The root of the tree has a depth of 1.
+I<FILEHANDLE> specifies where the output goes to.
+
+The tree shows the overall content hierarchy for an element.  Content
+hierarchies of descendents will also be shown.  Elements that exist at
+a higher (or equal) level, or if the maximum depth has been reached,
+are pruned.  The string "C<...>" is appended to an element if it has been
+pruned due to pre-existance at a higher (or equal) level.  The content
+of the pruned element can be determined by searching for the complete
+tree of the element (ie. elements w/o "C<...>").  Elements pruned because
+maximum depth has been reached will not have "C<...>" appended.
+
+Example:
+
+     |__section+)
+         |_(effect?, ...
+         |__title, ...
+         |__toc?, ...
+         |__epc-fig*,
+         |   |_(effect?, ...
+         |   |__figure,
+         |   |   |_(effect?, ...
+         |   |   |__title, ...
+         |   |   |__graphic+, ...
+         |   |   |__assoc-text?)
+
+=over 4
+
+=item B<Note>
+
+Pruning must be done to avoid a combinatorical explosion.  It is
+common for DTD's to define content hierarchies of infinite
+depth.  Even with a predefined maximum depth, the generated tree
+can become very large.
+
+=back
+          
+Since the tree outputed is static, the inclusion and exclusion sets of
+elements are treated specially.  Inclusion and exclusion elements
+inherited from ancestors are not propagated down to determine what
+elements are printed, but special markup is presented at a given
+element if there exists inclusion and exclusion elements from
+ancestors.  The reason inclusions and exclusions are not propagated
+down is because of the pruning done.  Since an element may occur in
+multiple contexts -- and have different ancestoral inclusions and
+exclusions in effect -- an element without "C<...>" may be the only place
+of reference to see the content hierarchy of the element.
+
+Example:
+
+    D1
+     |  {+} idx needbegin needend newline
+     |
+     |_(head,
+     |   | {A+} idx needbegin needend newline
+     |   |  {-} needbegin needend
+     |   |
+     |   |_(((#PCDATA |
+     |   |____((acro |
+     |   |       | {A+} idx needbegin needend newline
+     |   |       | {A-} needbegin needend
+     |   |       |
+     |   |       |_(((#PCDATA |
+     |   |       |____((super | ...
+     |   |       |______sub)))*)) ...
+
+Ignoring the lines starting with C<{}>'s, one gets the content hierachy
+of an element as defined by the DTD without concern of where it may
+occur in the overall structure.  The C<{}> lines give additional
+information regarding the element with respect to its existance within
+a specific context.  For example, when an ACRO element occurs within
+D1,HEAD -- along with its normal content -- it can contain IDX and
+NEWLINE elements due to inclusions from ancestors.  However, it cannot
+contain NEEDBEGIN and NEEDEND regardless of its defined content since
+an ancestor(s) excludes them.
+
+=over 4
+
+=item B<Note>
+
+Exclusions override inclusions.  If an element occurs in an
+inclusion set and an exclusion set, the exclusion takes
+precedence.  Therefore, in the above example, NEEDBEGIN, NEEDEND
+are excluded from ACRO.
+
+=back
+
+Explanation of {}'s keys:
+
+=over 4
+
+=item C<{+}>
+
+The list of inclusion elements defined by the current element.
+Since this is part of the content model of the element, the
+inclusion subelements are printed as part of the content
+hierarchy of the current element after the base content model.
+Subelements that are inclusions will have C<{+}> appended to the
+subelement entry.
+
+=item C<{A+}>
+
+The list of inclusion elements due to ancestors.  This is listed
+as reference to determine the content of an element within a
+given context.  None of the ancestoral inclusion elements are
+printed as part of the content hierarchy of the element.
+
+=item C<{-}>
+
+The list of exclusion elements defined by the current element.
+Since this is part of the content model of the element, any
+subelement in the content model that would be excluded will
+have {-} appended to the subelement listing.
+
+=item C<{A-}>
+
+The list of exclusion elements due to ancestors.  This is listed
+as reference to determine the content of an element within a
+given context.  None of the ancestoral exclusion elements have
+any effect on the printing of the content hierarchy of the
+current element.
+
+=back
+
+=head1 SEE ALSO
+
+SGML::EntMan(3)
+
+perl(1)
+
+=head1 AUTHOR
+
+Earl Hood, ehood@medusa.acs.uci.edu
+
+=cut

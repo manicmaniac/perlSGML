@@ -1,12 +1,13 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: SOCat.pm,v 1.8 1997/01/09 13:30:28 ehood Exp $  %Z%
+##      %Z% $Id: SOCat.pm,v 1.9 1997/08/27 21:01:22 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
-##      This file defines the SGML::SOCat class.
+##      This file defines the SGML::SOCat class.  POD documentation
+##	at the end of this file.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -17,27 +18,11 @@
 ##  but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##  GNU General Public License for more details.
-##  
-##  You should have received a copy of the GNU General Public License
-##  along with this program; if not, write to the Free Software
-##  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-##---------------------------------------------------------------------------##
-##  Usage:
-##	The following is an example of how to use this class:
 ##
-##	    use SGML::SOCat;
-##
-##	    $catalog = new SOCat;
-##	    $catalog->read_file("catalog");
-##	    $catalog->read_handle(\*STDIN);
-##	    # ...
-##
-##	The read_file and read_handle methods will return 1 if parsing
-##	succeeded.  Else they return 0.
-##
-##	The total maximun number of errors allowed while parsing is
-##	set by the $SGML::SOCat::MaxErrs variable.  The default value
-##	is 10.
+##  You should have received a copy of the GNU General Public
+##  License along with this program; if not, write to the Free
+##  Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+##  MA  02111-1307, USA.
 ##---------------------------------------------------------------------------##
 
 package SGML::SOCat;
@@ -52,7 +37,7 @@ use Exporter ();
 @ISA = qw( Exporter );
 
 @EXPORT = ();
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 $MaxErrs= 10;		# Max number of errors before aborting
 
@@ -104,9 +89,20 @@ $_hcnt	= 0;		# Filehandle count
 sub new {
     my $this = { };
     my $class = shift;
+    my $file = shift;
+
     bless $this, $class;
     $this->_reset();
-    $this;
+
+    my $stat = 1;
+    if (ref($file)) {	# if reference, assume reference to filehandle
+	my $name = shift;
+	$stat = $this->read_handle($file, $name);
+    } elsif (defined($file)) {
+	$stat = $this->read_file($file);
+    }
+
+    $stat ? $this : undef;
 }
 
 ##----------------------------------------------------------------------
@@ -670,3 +666,234 @@ sub _get_next_token {
 
 ##----------------------------------------------------------------------
 1;
+
+__END__
+
+=head1 NAME
+
+SGML::SOCat - SGML Open Catalog parser
+
+=head1 SYNOPSIS
+
+  use SGML::SOCat;
+  $soc = new SGML::SOCat "catalog";
+  $soc = new SGML::SOCat \*FILEHANDLE;
+
+or
+
+  use SGML::SOCat;
+  $soc = new SGML::SOCat;
+  $soc->read_file("catalog");
+  $soc->read_handle(\*FILEHADNLE);
+
+=head1 DESCRIPTION
+
+B<SGML::SOCat> is an SGML Open Catalog (as defined by
+I<SGML Open Technical Resolution 9401:1995> and extensions
+defined in I<SP>).  B<SGML::SOCat> is designed to be used
+by an entity manager (like B<SGML::EntMan>) for resolving
+external entities.
+
+=head1 OBJECT METHODS
+
+Some methods of B<SGML::SOCat> may return the following
+information: I<base system identifier in effect> and/or
+I<override flag>.  Example:
+ 
+    ($sysid, $base, $override) = $soc->get_public($pubid);
+
+The I<base system identifier in effect> is the base system
+identifier to use if the system identifier is relative.
+ 
+The I<override flag> states that the system identifier defined
+in the catalog should override the explicit system identifier
+specified in a document.
+
+The following methods are defined:
+
+=over 4
+
+=item $soc->B<read_file>($file)
+
+B<read_file> reads the catalog designated by the filename
+passed in.  A 1 is returned on success, and a 0 on failure.
+
+=item $soc->B<read_handle>(\*FILEHANDLE, $name)
+
+B<read_handle> reads the catalog designated by the filehandle
+passed in.  A 1 is returned on success, and a 0 on failure.
+A reference to a filehandle should passed in to avoid problems
+with package scoping.
+
+The second argument is optional.  If specified, it is used
+as the name of the filehandle for error messages.
+
+=item $soc->B<get_public>($pubid)
+
+B<get_public> retrieves the sysid public identifier.
+In a scalar context, 1 is returned if public identifier has
+a mapping to a system identifier, else 0 is returned.  For
+example:
+
+    if ($soc->get_public($pubid)) {
+	...
+    }
+
+In an list context, a list of values are returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_public($pubid);
+
+=item $soc->B<get_gen_ent>($gen_entity_name)
+
+B<get_gen_ent> retrieves the sysid for a I<general entity name>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the general entity name, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_gen_ent($name);
+
+=item $soc->B<get_parm_ent>($parm_entity_name)
+
+B<get_parm_ent> retrieves the sysid for a I<parameter entity name>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the parameter entity name, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_parm_ent($name);
+
+=item $soc->B<get_doctype>($doc_type_name)
+
+B<get_doctype> retrieves the sysid for the entity denoted
+by a I<document type name>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the document type name, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_doctype($name);
+
+=item $soc->B<get_linktype>($link_type_name)
+
+B<get_linktype> retrieves the sysid for the entity denoted
+by a I<link type name>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the link type name, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_linktype($name);
+
+=item $soc->B<get_system>($sysid)
+
+B<get_system> retrieves the sysid for the entity denoted
+by a I<system identifier>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the system identifier, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier>, I<base system identifier in effect>,
+and I<override flag>.  Example:
+
+    ($sysid, $base, $override) = $soc->get_system($sysid);
+
+=item $soc->B<get_sgmldecl>()
+
+B<get_doctype> retrieves the sysid for the SGML declaration.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the SGML declaration, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier> and I<base system identifier in effect>.
+Example:
+
+    ($sysid, $base) = $soc->get_sgmldecl();
+
+=item $soc->B<get_dtddecl>($pubid)
+
+B<get_dtddecl> retrieves the sysid for for the SGML declaration
+associated with a doctype external subset I<public indentifier>.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the public indentifier, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier> and I<base system identifier in effect>.
+Example:
+
+    ($sysid, $base) = $soc->get_dtddecl($pubid);
+
+
+=item $soc->B<get_document>()
+
+B<get_document> retrieves the sysid for the document entity.
+In a scalar context, the method returns 1 if there is a catalog
+entry for the document entity, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier> and I<base system identifier in effect>.
+Example:
+
+    ($sysid, $base) = $soc->get_document();
+
+=item $soc->B<get_delegate>($pubid)
+
+B<get_delegate> checks a public identifier to see if a pubid-prefix
+has been defined that matches the public identifier.  If so, then a
+system identifier of a catalog is returned.  The catalog should be
+used to resolve pubids that match the prefix.
+
+In a scalar context, the method returns 1 if there is a delegate
+entry for the public identifier, else 0 is returned.  In
+a list context, the following list is returned:
+I<system identifier> and  I<base system identifier in effect>.
+The system identifier is for a catalog that should be used to
+resolve the public identifier.
+Example:
+
+    ($sysid, $base) = $soc->get_delegate($pubid);
+
+Since B<SGML::SOCat> does not automatically open the returned
+catalog to resolve the public identifier, the caller must perform
+that function.  For example:
+
+    ($catalog, $base) = $soc->get_delegate($pubid);
+    ## Ignore $base for this example
+    $soc_del = new SGML::SOCat $catalog;
+    ($sysid, $base) = $soc_del->get_delegate($pubid);
+
+See L<SGML::EntMan> for external entity resolution that
+automatically handles delegations.
+
+=back
+
+=head1 NOTES
+
+=over 4
+
+=item *
+
+The total maximun number of errors allowed while parsing is
+set by the C<$SGML::SOCat::MaxErrs> variable.  The default value
+is 10.
+
+=item *
+
+If an error occurs during the instantiation of an B<SGML::SOCat>
+object (via the B<new> class method), C<undef> is returned.
+
+=back
+
+=head1 SEE ALSO
+
+SGML::EntMan(3)
+
+perl(1)
+
+=head1 AUTHOR
+
+Earl Hood, ehood@medusa.acs.uci.edu
+
+=cut

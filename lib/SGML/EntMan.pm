@@ -1,12 +1,12 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: EntMan.pm,v 1.4 1997/01/09 13:26:51 ehood Exp $  %Z%
+##      %Z% $Id: EntMan.pm,v 1.5 1997/08/27 21:01:18 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
 ##      This file defines the SGML::EntMan class.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -403,3 +403,113 @@ sub _errMsg {
 
 ##----------------------------------------------------------------------
 1;
+
+__END__
+
+=head1 NAME
+
+SGML::EntMan - SGML entity manager
+
+=head1 SYNOPSIS
+
+  use SGML::EntMan;
+  $entman = new SGML::EntMan
+  $entman->read_catalog($file);
+  $entman->read_catalog_handle(\*FILEHANDLE);
+
+=head1 DESCRIPTION
+
+B<SGML::EntMan> is a simple SGML entity manager.  It used resolve
+external entities into Perl filehandles.
+
+In order to resolve entities, SGML Open Catalogs (as defined by
+I<SGML Open Technical Resolution 9401:1995> and extensions defined in
+I<SP>) must be loaded by B<SGML::EntMan>.  When the B<SGML::EntMan>
+module is first loaded, it reads all catalogs specified by the
+B<SGML_CATALOG_FILES> environent variable.  The envariable is a list
+of file pathnames of catalogs.  Each pathname is separated by a 'C<:>'
+(or 'C<;>' under Windows/MSDOS).
+
+All mappings read from the B<SGML_CATALOG_FILES> envariable are
+are effective across all B<SGML::EntMan> object instances.  However,
+mappings loaded through the B<read_catalog> and
+B<read_catalog_handle> methods override mappings defined through
+the B<SGML_CATALOG_FILES> envariable.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<new> SGML::EntMan
+
+B<new> instantiates a new B<SGML::EntMan> object.
+
+=back
+
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item $entman->B<read_catalog>(I<$file>)
+
+Read the catalog file specified by I<$file>.  A 1 is returned
+on success, and a 0 on failure.
+
+=item $entman->B<read_catalog_handle>(\*I<FILEHANDLE>)
+
+Read the catalog specified by I<FILEHANDLE>.  A 1 is returned
+on success, and a 0 on failure.
+
+=item $fh = $entman->B<open_entity>(I<$name>, I<$pubid>, I<$sysid>)
+
+Open a filehandle to the entity specified entity name I<$name>,
+public identifier I<$pubid>, and/or system identifier I<$sysid>.
+C<undef> is returned if entity could not be resolved, and a warning
+message is printed to STDERR.
+
+If I<$name> contains a 'C<%>' character, it is treated a parameter
+entity name.
+
+=item $fh = $entman->B<open_doctype>(I<$name>, I<$pubid>, I<$sysid>)
+
+Open a filehandle to the doctype specified entity name I<$name>,
+public identifier I<$pubid>, and/or system identifier I<$sysid>.
+C<undef> is returned if doctype could not be resolved, and a warning
+message is printed to STDERR.
+
+=item $fh = $entman->B<open_public_id>(I<$pubid>)
+
+Open a filehandle to the entity denoted by the public identifier I<$pubid>.
+C<undef> is returned if public identifier could not be resolved, and
+a warning message is printed to STDERR.
+
+=item $entman->B<open_system_id>(I<$sysid>)
+
+Open a filehandle to the entity denoted by the system identifier I<$sysid>.
+C<undef> is returned if system identifier could not be resolved, and
+a warning message is printed to STDERR.
+
+=back
+
+=head1 ENVIRONMENT VARIABLES
+
+=over 4
+
+=item B<SGML_CATALOG_FILES>
+
+List of default catalogs.
+
+=back
+
+=head1 SEE ALSO
+
+SGML::DTD(3), SGML::FSI(3)
+
+perl(1)
+
+=head1 AUTHOR
+
+Earl Hood, ehood@medusa.acs.uci.edu
+
+=cut

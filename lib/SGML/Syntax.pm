@@ -1,12 +1,12 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Syntax.pm,v 1.3 1996/12/18 10:49:46 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Syntax.pm,v 1.4 1997/08/27 21:01:24 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
 ##      This file defines the SGML::Syntax class.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by

@@ -1,12 +1,12 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Opt.pm,v 1.1 1996/11/14 14:47:42 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Opt.pm,v 1.2 1997/08/27 21:01:20 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
 ##      This file defines the SGML::Opt class.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
