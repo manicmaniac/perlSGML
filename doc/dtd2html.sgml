@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.1 1996/09/30 16:37:23 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.2 1996/10/05 15:21:33 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -443,109 +443,7 @@ via the
 <a name="#-level"><code>-level</code></a>
 command-line option.
 </p>
-
-<p>Elements that exist at a higher (or equal) level, or if the maximum
-depth has been reached, are pruned.  The string "..." is appended to
-an element if it has been pruned due to pre-existance at a higher
-(or equal) level, and the pruned element is a hyperlink to the
-the complete tree of the element (ie. elements w/o "...").
-</p>
-
-<p>A non-pruned element (elements w/o "...") will be a hyperlink
-to the element's <a href="#elementpage">element page</a>.
-</p>
-
-<p>Since the tree outputed is static, the inclusion and exclusion sets of
-elements are treated specially. Inclusion and exclusion elements
-inherited from ancestors are not propagated down to determine
-what elements are printed, but special markup is presented at a
-given element if there exists inclusion and exclusion elements from
-ancestors. The reason inclusion and exclusion elements are not
-propagated down is because of the pruning done. An element w/o "..."
-may be the only place of reference to see the content hierarchy of
-that element. However, the element may occur in multiple contents
-and have different ancestoral inclusion and exclusion elements
-applied to it. 
-</p>
-
-<p>Have I lost you? Maybe an example may help:</p>
-<pre>
-     OPENBOOK
-     |
-     |_d1
-     |  | (I): idx needbegin needend newline
-     |  |
-     |  |_abbrev
-     |  |  | (Ia): idx needbegin needend newline
-     |  |  | (X): needbegin needend
-     |  |  |
-     |  |  |_#PCDATA
-     |  |  |_acro
-     |  |  |  | (Ia): idx needbegin needend newline
-     |  |  |  | (Xa): needbegin needend
-     |  |  |  |
-     |  |  |  |_#PCDATA
-     |  |  |  |_sub ...
-     |  |  |  |_super ...
-     |  |  | 
-</pre>
-
-<p>Ignoring the lines starting with ()'s, one gets the content hierachy
-of an element as defined by the DTD without concern of where it
-may occur in the overall structure. The ()'s line give additional
-information regarding the element with respect to its existance
-within a specific context. For example, when an acro element
-occurs within <code>openbook</code>/<code>d1</code>/<code>abbrev</code>,
-along with its normal
-content, it can contain <code>idx</code> and <code>newline</code>
-elements due to
-inclusions from ancestors. However, it cannot contain <code>needbegin</code>,
-<code>needend</code> regardless of its defined content since an ancestor(s)
-excludes them.
-</p>
-
-<dl>
-<dt>NOTE</dt>
-<dd>Exclusions override inclusions. If an element occurs in an
-inclusion set and an exclusion set, the exclusion takes
-precedence. Therefore, in the above example, <code>needbegin</code>, 
-<code>needend</code> are excluded from <code>acro</code>.</dd>
-</dl>
-
-<p>Explanation of ()'s keys:
-</p>
-
-<dl>
-
-<dt><code>(I)</code></dt>
-<dd>The list of inclusion elements defined by the current element.
-Since this is part of the content model of the element, the
-inclusion elements are printed as part of the content
-hierarchy of the current element.
-</dd>
-
-<dt><code>(Ia)</code></dt>
-<dd>The list of inclusion elements due to ancestors. This is listed
-as reference to determine the content of an element within a
-given context. None of the ancestoral inclusion elements are
-printed as part of the content hierarchy of the element. 
-</dd>
-<dt><code>(X)</code></dt>
-<dd>The list of exclusion elements defined by the current
-element. Since this is part of the content model of the
-element, the exclusion elements prevent elements defined in
-the base content and inclusion sets to be printed.
-</dd>
-
-<dt><code>(Xa)</code></dt>
-<dd>The list of exclusion elements due to ancestors. This is listed
-as reference to determine the content of an element within a
-given context. None of the ancestoral exclusion elements
-have any effect on the printing of the content hierarchy of
-the current element.
-</dd>
-
-</dl>
+&tree;
 
 <h3><a name="elementpage">element</a></h3>
 
@@ -1090,7 +988,7 @@ are lost in the update.
 </ul>
 
 <!-- =================================================================== -->
-&catalog;
+&resents;
 
 <!-- =================================================================== -->
 &avail;

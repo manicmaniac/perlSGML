@@ -1,15 +1,5 @@
-<!--	%Z% %Y% $Id: catalog.mod,v 1.1 1996/09/30 16:38:41 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: catalog.mod,v 1.2 1996/10/05 15:20:33 ehood Exp $ %Z%
   -->
-<hr>
-<h2><a name="resolving">Resolving External Entities</a></h2>
-
-<p>Defining the mapping between external entities to system files
-may be done via that <a href="#-catalog"><code>-catalog</code></a>
-command-line option.  The <em>catalog</em>, provides you with the
-capability of mapping public identifiers to system identifiers
-(files) or to map entity names to system identifiers.
-</p>
-
 <h3>Catalog Syntax</h3>
 
 <p>The syntax of a catalog is a subset of SGML catalogs
@@ -77,7 +67,7 @@ envariables (ie. environment variables) are supported:
 </p>
 
 <dl>
-<dt>P_SGML_PATH</dt>
+<dt><a name="P_SGML_PATH">P_SGML_PATH</a></dt>
 <dd><p>This is a colon (semi-colon for MSDOS users)
 separated list of paths for finding catalog files
 or system identifiers.  For example, if a system identifier is not
@@ -85,17 +75,15 @@ an absolute pathname, then the paths listed in P_SGML_PATH are used to
 find the file.
 </p>
 </dd>
-<dt>SGML_CATALOG_FILES</dt>
+<dt><a name="SGML_CATALOG_FILES">SGML_CATALOG_FILES</a></dt>
 <dd><p>This envariable is a colon (semi-colon for MSDOS users)
 separated list of catalog files to read.
-The file specified by
-<a href="#-catalog"><code>-catalog</code></a>
-is read first before any files specified by SGML_CATALOG_FILES.  If
+If
 a file in the list is not an absolute path, then file is searched in
 the paths listed in the P_SGML_PATH and SGML_SEARCH_PATH.
 </p>
 </dd>
-<dt>SGML_SEARCH_PATH</dt>
+<dt><a name="SGML_SEARCH_PATH">SGML_SEARCH_PATH</a></dt>
 <dd><p>This is a colon (semi-colon for MSDOS users)
 separated list of paths for finding catalog files
 or system identifiers.  This envariable serves the same function as

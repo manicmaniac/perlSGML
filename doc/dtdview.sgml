@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtdview.sgml,v 1.1 1996/09/30 16:37:24 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtdview.sgml,v 1.3 1996/10/05 15:23:55 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -51,7 +51,7 @@ the following:
 <p>The string in the "()" will contain the name of the DTD.
 </p>
 
-<p>See <a href="#usage">Usage</a> on how to invokde <code>dtdview</code>
+<p>See <a href="#usage">Usage</a> on how to invoke <code>dtdview</code>
 from your shell command-line.
 See <a href="#syntax">Command Syntax</a> on how to
 invoke <code>dtdview</code> commands.  See
@@ -460,7 +460,7 @@ loading of DTDs and catalogs.
 </dl>
 
 <!-- =================================================================== -->
-&catalog;
+&resents;
 
 <!-- =================================================================== -->
 &avail;
