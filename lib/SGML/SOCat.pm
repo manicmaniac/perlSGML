@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: SOCat.pm,v 1.7 1997/01/09 13:17:08 ehood Exp $ %Z%
+##      %Z% $Id: SOCat.pm,v 1.8 1997/01/09 13:30:28 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -41,6 +41,12 @@
 ##---------------------------------------------------------------------------##
 
 package SGML::SOCat;
+
+use vars qw(@ISA @EXPORT $VERSION
+	    $MaxErrs
+	    $com $lit $lit_ $lita $lita_ $quotes
+	    $_hcnt %_name_sysid_entries %_scalar_entries
+	    %Entries);
 
 use Exporter ();
 @ISA = qw( Exporter );
