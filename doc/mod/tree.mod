@@ -1,8 +1,8 @@
-<!--	%Z% %Y% $Id: tree.mod,v 1.1 1996/10/05 14:02:27 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: tree.mod,v 1.2 1996/10/06 18:47:13 ehood Exp $ %Z%
   -->
 
 <p>The tree shows the overall content hierarchy for an element.
-Content hierachies of descendents will also be shown.  Elements that
+Content hierarchies of descendents will also be shown.  Elements that
 exist at a higher (or equal) level, or if the maximum depth has been
 reached, are pruned.  The string "<code>...</code>" is appended to an
 element if it has been pruned due to pre-existance at a higher (or
@@ -34,7 +34,7 @@ reached will not have "<code>...</code>" appended.
 <dt><strong>Note</strong></dt>
 <dd><p>Pruning must be done to avoid a combinatorical explosion.
 It is common for DTD's to define content hierarchies of infinite
-depth.  Even with a predefine maximun depth, the generated tree
+depth.  Even with a predefined maximum depth, the generated tree
 can become very large.
 </p>
 </dd>
@@ -44,13 +44,12 @@ can become very large.
 of elements are treated specially. Inclusion and exclusion elements
 inherited from ancestors are not propagated down to determine
 what elements are printed, but special markup is presented at a
-given element if there exists inclusion and exclusion elements
-from ancestors. The reason inclusion and exclusion elements are
-not propagated down is because of the pruning done. An element without
-"<code>...</code>" may be the only place of reference to see the
-content hierarchy of that element. However, the element may occur
-in multiple contexts and have different ancestoral inclusion and
-exclusion elements applied to it.
+given element if there exists inclusion and exclusion elements from
+ancestors. The reason inclusions and exclusions are not propagated down
+is because of the pruning done. Since an element may occur in multiple
+contexts -- and have different ancestoral inclusions and exclusions in
+effect -- an element without "<code>...</code>" may be the only place
+of reference to see the content hierarchy of the element.
 
 </p>
 
@@ -78,11 +77,11 @@ exclusion elements applied to it.
 hierachy of an element as defined by the DTD without concern of where
 it may occur in the overall structure. The {} lines give additional
 information regarding the element with respect to its existance
-within a specific context. For example, when an acro element occurs
-within <code>d1</code>/<code>abbrev</code>, along with its normal
-content, it can contain <code>idx</code> and <code>newline</code>
+within a specific context. For example, when an <code>ACRO</code> element occurs
+within <code>D1</code>,<code>HEAD</code>, along with its normal
+content, it can contain <code>IDX</code> and <code>NEWLINE</code>
 elements due to inclusions from ancestors. However, it cannot contain
-<code>needbegin</code>, <code>needend</code> regardless of its defined
+<code>NEEDBEGIN</code> and <code>NEEDEND</code> regardless of its defined
 content since an ancestor(s) excludes them.
 
 </p>
