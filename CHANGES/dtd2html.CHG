@@ -1,6 +1,6 @@
 Revision History for dtd2html
 -----------------------------
-%Z% %Y% $Id: dtd2html.CHG,v 1.1 1996/09/30 13:26:36 ehood Exp $ %Z%
+	%Z% $RCSfile: dtd2html.CHG,v $ %Z%
 ==============================================================================
 See the changes file for dtd.pl (dtd_pl.CHG) since changes in it may
 affect dtd2html.
