@@ -1,12 +1,13 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: Parser.pm,v 1.7 1997/02/07 20:04:39 ehood Exp $  %Z%
+##      %Z% $Id: Parser.pm,v 1.8 1997/02/19 19:16:03 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
-##      This file defines the SGML::Parser class.
+##      This file defines the SGML::Parser class: a basic SGML
+##	instance parser.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1997  Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -26,34 +27,29 @@
 ##########################################################################
 ##  Status of module:
 ##
-##	o  Doctype declaration and subset not supported.
 ##	o  Current supported features:
 ##	    -  Start tags (inluded attribute specification list)
 ##          -  End tags
 ##          -  Processing instructions
 ##          -  Comment declarations
 ##          -  PCDATA
-##	    -  Marked sections (w/parameter ent ref callback)
-##	    -  CDATA/RCDATA elements (mode must be set via callbacks)
+##	    -  Marked sections (w/parameter ent ref callback method)
+##	    -  CDATA/RCDATA elements (mode must be set via callback methods)
+##
+##	   See parse_data methods for more information.
 ##########################################################################
 
 package SGML::Parser;
 
-use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS 
-	    $CDataFunc $CommentFunc $ETagFunc $IgnDataFunc $MSCloseFunc
-	    $MSStartFunc $PERefFunc $PIFunc $STagFunc
-	    $ErrHandle $ErrFunc
-	    $ModePCData $ModeCData $ModeIgnore $ModeMSCData
-	    );
+use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use Exporter ();
 @ISA = qw( Exporter );
-$VERSION = "0.04";
+$VERSION = "0.10";
 @EXPORT = ();
 @EXPORT_OK = ();
 %EXPORT_TAGS = ();
 
-use SGML::Syntax qw(:Delims);
 use SGML::Util;
 
 ##########################################################################
@@ -62,59 +58,22 @@ use SGML::Util;
 ##	Class Variables
 ##**********************************************************************##
 
-##  Class level callbacks
-##
-$CDataFunc	= undef;	# Cdata callback
-$CommentFunc	= undef;	# Comment callback
-$ETagFunc	= undef;	# End tag callback
-$IgnDataFunc	= undef;	# Ignored data callback
-$MSCloseFunc	= undef;	# Marked section end callback
-$MSStartFunc	= undef;	# Marked section start callback
-$PERefFunc	= undef;	# Parameter entity reference callback
-$PIFunc		= undef;	# Processing instruction callback
-$STagFunc	= undef;	# Start tag callback
-
-	## Each callback is invoked as follows:
-        ##
-        ##        &$CDataFunc($this, $cdata);
-        ##        &CommentFunc($this, \@comments);
-        ##        &$ETagFunc($this, $gi);
-        ##        &$IgnDataFunc($this, $data);
-        ##        &$MSCloseFunc($this);
-        ##        &$MSStartFunc($this, $status_keyword, $status_spec);
-        ## $str = &PERefFunc($this, $entname);
-        ##        &PIFunc($this, $pidata);
-        ##        &$STagFunc($this, $gi, $attr_spec);
-        ##
-        ## $this is a reference to the SGML::Parser object.
-        ##
-        ## Callbacks can also be registered for a particular instance.
-        ## Any registered instance callbacks will be invoked instead
-        ## of the class level callbacks.
-        
-##  Filehandle to send error messages        
-##
-$ErrHandle	= \*STDERR;
-
-##  Error function callback.  $ErrHandle not used if defined
-##
-$ErrFunc	= undef;
-
-	## If defined, the error function is invoked as follows:
-        ##	
-        ##	&$ErrFunc($this, @error_text);
-        ##
-        ## @error_text signifies that the rest of the arguments
-        ## are strings, when concatenated together, is the error
-        ## message.  The line number and label of the input where
-        ## error occured can be retrieved by the get_line_no and
-        ## get_input_label methods of the passed in parser object.
-
-##  Some constants
 $ModePCData	= 1;
 $ModeCData	= 2;
-$ModeIgnore	= 3;
-$ModeMSCData	= 4;
+$ModeRCData	= 3;
+$ModeIgnore	= 4;
+$ModeMSCData	= 5;
+$ModeMSRCData	= 6;
+
+$TypeERO	= 1;
+$TypeETagO	= 2;
+$TypeMDO	= 3;
+$TypeMSC	= 4;
+$TypePIO	= 5;
+$TypeSTagO	= 6;
+
+$namestart	= 'A-Za-z';
+$namechars	= '\w.';
 
 ##########################################################################
 
@@ -130,37 +89,21 @@ sub new {
     my $class = shift;
     
     ## Private variables
+    $this->{_input_stack} = [ ];	# Input stack
+    $this->{_input} = undef;		# Reference to current input info
+    $this->{_buf} = '';			# Working buffer
+    $this->{_open_ms} = 0;		# Number of open marked sections
+    $this->{_open_ms_ign} = 0;		# Number of open marked sections in
+					# 	ignore mared section
 
-    $this->{_string} = undef;	# Input string
-    $this->{_fh} = undef;	# Input file handle
-    $this->{_filename} = '';	# Input filename of handle (for diagnostic
-    				#     purposes)
-    $this->{_buf} = '';		# Working buffer
-    $this->{_open_ms} = 0;	# Number of open marked sections
-    $this->{_abort} = 0;	# Abort flag
-
-    ## Instance level callbacks; override class level                            
-    $this->{CDataFunc}	= undef;	# Cdata callback
-    $this->{CommentFunc}= undef;	# Comment callback
-    $this->{ETagFunc}	= undef;	# End tag callback
-    $this->{IgnDataFunc}= undef;	# Ignored data callback
-    $this->{MSCloseFunc}= undef;	# Marked section end callback
-    $this->{MSStartFunc}= undef;	# Marked section start callback
-    $this->{PERefFunc}	= undef;	# Parameter entity reference callback
-    $this->{PIFunc}	= undef;	# Processing instruction callback
-    $this->{STagFunc}	= undef;	# Start tag callback
-
-    ## Instance level error handling; override class level
-    $this->{ErrHandle}	= undef;	# Undefined - use class setting
-    $this->{ErrFunc}	= undef;	# Undefined - use class setting
-    
-    ## Other instance stuff
-    $this->{mode} = $ModePCData;	# Parsing mode
+    ## Public variables
+    $this->{mode} = $ModePCData;	# Parsing mode: Can be set
+					# by method callbacks to control
+					# recognition modes.
                                 
     bless $this, $class;
     $this;
 }
-
 
 ##----------------------------------------------------------------------
 ##	parse_data() parses an SGML instance specified by either a
@@ -169,9 +112,8 @@ sub new {
 ##      the callar may need to make a copy before calling parse_data
 ##      if the original input is needed afterwards.
 ##
-##	The routine calls registered callback for the various events
-##	that can occur.  It is up to the callbacks to make sense of
-##      the data.
+##	The delimiters defined by the reference concrete syntax are
+##	assumed.
 ##
 ##	Example usage:
 ##
@@ -179,293 +121,364 @@ sub new {
 ##				$line_no_start);
 ##
 ##	Only the first argument is required.  The other are optional.
+##
+##	The routine calls callback methods for the various events
+##	that can occur.  It is up to the methods to make sense of
+##      the data.
+##
+##	The following lists the various methods invoked during parsing:
+##
+##		   $this->cdata($cdata);
+##		   $this->char_ref($funcname_or_charnum);
+##		   $this->comment_decl(\@comments);
+##		   $this->end_tag($gi);
+##	    $txt = $this->entity_ref($entname);
+##		   $this->ignored_data($data);
+##		   $this->marked_sect_close();
+##		   $this->marked_sect_open($status_keyword, $status_spec);
+##	    $txt = $this->parm_entity_ref($entname);
+##		   $this->processing_inst($pidata);
+##		   $this->start_tag($gi, $attr_spec);
+##
+##		   $this->error($message);
+##
+##	The entity reference methods can return a string.  If so,
+##	it is prepended to the current buffer for parsing.  Return
+##	the empty string, or undef, if no text should be parsed.
+##
+##	These methods should be redefined by subclasses to perform
+##	whatever parsing tasks are required.
 ##        
 sub parse_data {
 
     my $this = shift;		# Self reference
-    my $in = shift;		# Input (filehandle or a string reference)
-    $this->{_label} = shift;	# Input label (Optional)
-    my $buf = shift || '';	# Initial buffer (Optional)
-    $this->{_ln} = shift || 0;	# Starting line number (Optional).
-    
-  # Eval code to capture die's
-  eval {
+    my $href = { };
 
+    my $in = shift;		# Input (filehandle or a string reference)
+    $href->{_label} = shift;	# Input label (Optional)
+    my $buf = shift || '';	# Initial buffer (Optional)
+    $href->{_ln} = shift || 0;	# Starting line number (Optional).
+    
     my($before, $after, $type, $tmp);
-    my $m1;
+    my($m1, $gi, $name);
     
     ## Set values for subsequent calls to _get_line()
     if (ref($in) eq 'SCALAR') {
-        $this->{_string} = $in;
-        $this->{_fh} = undef;
+	$href->{_string} = $in;
+	$href->{_fh} = undef;
     } else {
-        $this->{_string} = undef;
-        $this->{_fh} = $in;
+	$href->{_string} = undef;
+	$href->{_fh} = $in;
     }
+    push(@{$this->{_input_stack}}, $this->{_input})
+	if $this->{_input};
+    $this->{_input} = $href;
 
-    ## Parse input
-    LOOP: while (defined($buf)) {
-    
-    	# Fill working buffer if empty
-    	if ($buf eq '') {
-            last LOOP  unless defined($buf = $this->_get_line());
-        }
-        
-	#--------------------------------------------------------------
-        # Check for markup.  Choose match that occurs earliest in
-        # string.  This stuff adds more time to parsing, but supports
-        # arbitrary values of the delimiters. (Size of delimiter
-        # check needs to be added)
-	#--------------------------------------------------------------
-        
-        ($before, $after, $type, $m1) = (undef,'','','');
+    # Eval code to capture die's
+    eval {
 
-	# Pcdata mode checks
-	if ($this->{mode} == $ModePCData) {
+	## Parse input
+	LOOP: while (defined($buf)) {
+	
+	    # Fill working buffer if empty
+	    if ($buf eq '') {
+		last LOOP  unless defined($buf = $this->_get_line());
+	    }
+	    
+	    #--------------------------------------------------------------
+	    # Check for markup.  Choose match that occurs earliest in
+	    # string.
+	    #--------------------------------------------------------------
 
-	    if ($buf =~ /$mdo/o) {			# Markup declaration
-		if (!defined($before) or length($before) > length($`)) {
-		    $before = $`;  $after = $';
-		    if ($after =~ s/^$comm//o) {	# Comment declaration
-			$type = $comm_;
-		    } elsif ($after =~ s/^$dso//o) {    # Marked section
-			$type = $dso_;
-		    } else {			    	# Unsupported
-			$this->_errMsg("Unsupported markup declaration");
-			($before, $after, $type) = (undef,'','');
+	    ($before, $after, $type, $m1) = (undef,'','','');
+
+	    # Pcdata mode checks
+	    if ($this->{mode} == $ModePCData) {
+		if ($buf =~ m@<([!?/>$namestart])@o) {
+		    $before = $`;  $m1 = $1;  $after = $';
+		    BLK: {
+			if ($m1 eq '!') { $type = $TypeMDO;  last BLK; }
+			if ($m1 eq '?') { $type = $TypePIO;  last BLK; }
+			if ($m1 eq '/') { $type = $TypeETagO;  last BLK; }
+			if ($m1 eq '>') { $type = $TypeSTagO;  last BLK; }
+			$type = $TypeSTagO;
 		    }
 		}
 	    }
-	    if ($buf =~ /$stago([$namestart])/o) {	# Start tag
-		if (!defined($before) or length($before) > length($`)) {
-		    $before = $`;  $m1 = $1;  $after = $';
-		    $type = $stago_;
+
+	    # Check for entity reference
+	    if ($this->{mode} == $ModePCData or
+		$this->{mode} == $ModeRCData or
+		$this->{mode} == $ModeMSRCData) {
+
+		if ($buf =~ m@\&([#$namestart])@o) {
+		    if (!defined($before) or length($before) > length($`)) {
+			$before = $`;  $m1 = $1;  $after = $';
+			$type = $TypeERO;
+		    }
 		}
 	    }
-	    if ($buf =~ /$pio/o) {			# Processing inst
-		if (!defined($before) or length($before) > length($`)) {
-		    $before = $`;  $after = $';
-		    $type = $pio_;
+
+	    # Check for cdata mode
+	    if ($this->{mode} == $ModeCData) {
+		if ($buf =~ m|<(/)|) {
+		    if (!defined($before) or length($before) > length($`)) {
+			$before = $`;  $m1 = $1;  $after = $';
+			$type = $TypeETagO;
+		    }
 		}
 	    }
-	} # End if in pcdata mode
 
-	# Check if pcdata or in a cdata element
-	if ($this->{mode} == $ModePCData or
-	    $this->{mode} == $ModeCData) {
+	    # Check for marked section close
+	    if ($this->{mode} != $ModeCData) {
 
-	    if ($buf =~ /$etago([$namestart])/o) {	# End tag
-		if (!defined($before) or length($before) > length($`)) {
-		    $before = $`;  $m1 = $1;  $after = $';
-		    $type = $etago_;
+		if ($buf =~ m|\]\]>|) {
+		    if (!defined($before) or length($before) > length($`)) {
+			$before = $`;  $after = $';
+			$type = $TypeMSC;
+		    }
 		}
 	    }
-	}
 
-	# Check if regardless
-	if ($buf =~ /$msc$mdc/o) {			# Marked section close
-            if (!defined($before) or length($before) > length($`)) {
-	        $before = $`;  $after = $';
-	        $type = $msc_;
-            }
-	}
+	    # Check for marked section opens while ignoring
+	    if ($this->{mode} == $ModeIgnore) {
+		if ($buf =~ m|<!\[|) {
+		    if ($type == $TypeMSC and length($before) > length($`)) {
+			$this->{_open_ms_ign}++;
+		    }
+		}
+	    }
 
-	#--------------------------------------------------------------
-	# Now, check what the type is an process accordingly.
-	#--------------------------------------------------------------
-        
-        ## Invoke cdata callback if any before text
-	if ($before ne '') {
+	    #--------------------------------------------------------------
+	    # Now, check what the type is and process accordingly.
+	    #--------------------------------------------------------------
+	    
+	    ## Invoke cdata callback if any before text -------------------
+	    if ($before ne '') {
+		$this->{mode} == $ModeIgnore ?
+		    $this->ignored_data($before) : $this->cdata($before);
+	    }
+
+	    ## Entity reference -------------------------------------------
+	    if ($type == $TypeERO) {
+		$buf = $after;
+		$name = $m1;
+	
+		if ($name eq '#') {	# Character reference
+		    if ($buf =~ s/^([$namechars]+);?\s*//o) {
+			$name = $1;
+		    }
+		    $this->char_ref($name);
+
+		} else {		# General entity reference
+		    if ($buf =~ s/^([$namechars]*);?\s*//o) {
+			$name .= $1;
+		    }
+		    $buf = $this->entity_ref($name) . $buf;
+		}
+
+		next LOOP;
+	    }
+	    
+
+	    ## End tag ----------------------------------------------------
+	    if ($type == $TypeETagO) {
+		$buf = $after;
+		$gi = '';
+	
+		# Get rest of generic identifier
+		if ($buf =~ s/^([$namechars]*)\s*//o) {
+		    $gi = $1;
+		}
+		# Read up to tagc
+		ETAG: while (1) {
+		    if ($buf =~ />/o) { $buf = $'; last ETAG; }
+		    if (!defined($buf = $this->_get_line())) {
+			$this->error("Unexpected EOF; end tag not closed");
+		    }
+		}
+		$this->end_tag($gi);
+		next LOOP;
+	    }
+	    
+	    ## Start tag --------------------------------------------------
+	    if ($type == $TypeSTagO) {
+		$gi = $m1;  $buf = $after;
+	
+		# Check for null start tag
+		if ($gi eq '>') {
+		    $this->start_tag('', '');
+		    next LOOP;
+		}
+
+		# Get rest of generic identifier
+		if ($buf =~ s/^([$namechars]*)//o) { $gi .= $1; }
+	    
+		# Get attribute specification list and tagc
+		$attr = '';
+		STAG: while (1) {
+		    if ($buf =~ />/o) {
+			$attr .= $`;  $buf = $';
+			if (!&SGMLopen_lit($attr)) {
+			    last STAG;
+			} else {
+			    $attr .= '>';
+			    next;
+			}
+		    }
+		    if (!defined($tmp = $this->_get_line())) {
+			$this->error("Unexpected EOF; " .
+				       "start tag not finished");
+			$buf = undef;
+			last STAG;
+		    }
+		    $buf .= $tmp;
+		}
+		$this->start_tag($gi, $attr);
+		next LOOP;
+	    }
+
+	    ## Processing instruction -------------------------------------
+	    if ($type == $TypePIO) {
+		$buf = $after;
+		$tmp = '';
+	    
+		# Read up to tagc
+		PI: while (1) {
+		    if ($buf =~ />/o) { $tmp .= $`;  $buf = $'; last PI; }
+		    $tmp .= $buf;
+		    if (!defined($buf = $this->_get_line())) {
+			$this->error("Unexpected EOF; PI not closed");
+		    }
+		}
+		$this->processing_inst($tmp);
+		next LOOP;
+	    }
+	    
+	    ## Marked section end -----------------------------------------
+	    if ($type == $TypeMSC) {
+		$buf = $after;
+		if ($this->{_open_ms} == 0) {
+		    $this->error("Mark section close w/o a " .
+				   "mark section start");
+		} else {
+		    $this->{_open_ms}--;
+		}
+
+		# Check for nested ms's in ignore ms
+		if ($this->{mode} == $ModeIgnore) {
+		    $this->{_open_ms_ign}--	if $this->{_open_ms_ign};
+		    next LOOP			if $this->{_open_ms_ign};
+		}
+
+		if ($this->{mode} == $ModeIgnore or
+		    $this->{mode} == $ModeMSCData or
+		    $this->{mode} == $ModeMSRCData) {
+
+		    $this->{mode} = $ModePCData;
+		}
+		$this->marked_sect_close();
+		next LOOP;
+	    }
+
+	    ## Markup declaration -----------------------------------------
+	    if ($type == $TypeMDO) {
+		$buf = $after;
+
+		if ($buf =~ s/^\[//) {		## Marked section start
+		    $tmp = '';
+		    # Read up to dso
+		    MSO: while (1) {
+			if ($buf =~ /\[/o) {
+			    $tmp .= $`;  $buf = $'; last MSO;
+			}
+			$tmp .= $buf;
+			if (!defined($buf = $this->_get_line())) {
+			    $this->error("Unexpected EOF for " .
+					   "marked section start");
+			}
+		    }
+
+		    if ($tmp =~ /%([$namechars])/o) {
+			$keyword = $this->parm_entity_ref($1);
+		    } else {
+			($keyword = $tmp) =~ s/\s//g;
+		    }
+		    $keyword = uc $keyword;
+		    $this->marked_sect_open($keyword, $tmp);
+
+		    if ($keyword eq "IGNORE") {
+			$this->{mode} = $ModeIgnore;
+		    } elsif ($keyword eq "RCDATA") {
+			$this->{mode} = $ModeMSRCData;
+		    } elsif ($keyword eq "CDATA") {
+			$this->{mode} = $ModeMSCData;
+		    } else {
+			$this->{_open_ms}++;
+		    }
+		    next LOOP;
+
+		} # end marked section open
+
+		if ($buf =~ s/^--//) {		## Comment declaration
+		    my(@comms) = ();
+		    # Outer loop for comment declaration as a whole
+		    COMDCL: while (1) {
+			$tmp = '';
+			# Inner loop for each comment block in declaration
+			COMM: while (1) {
+			    if ($buf =~ /--/o) {
+				$tmp .= $`;  $buf = $'; last COMM;
+			    }
+			    $tmp .= $buf;
+			    if (!defined($buf = $this->_get_line())) {
+				$this->error("Unexpected EOF; " .
+					       "Comment not closed");
+				last COMM;
+			    }
+			}
+			# Push comment block on list
+			push(@comms, $tmp);
+			last COMM  unless defined($buf);
+			
+			# Check for declaration close or another comment block
+			while ($buf !~ /\S/) {
+			    if (!defined($buf = $this->_get_line())) {
+				$this->error("Unexpected EOF; " .
+					       "Comment declaration " .
+					       "not closed");
+				last COMDCL;
+			    }
+			}
+			if ($buf =~ s/^\s*--//o) {
+			    next COMDCL;
+			} elsif ($buf =~ s/^\s*>//o) {
+			    last COMDCL;
+			} else {	# punt
+			    $this->error("Invalid cdata outside of comment");
+			    next COMDCL;
+			}
+		    }
+		    $this->comment_decl(\@comms);
+
+		    next LOOP;
+		} # end comment
+
+		$buf = "<!" . $buf;
+
+	    } # end markup declaration
+
+	
+	    ## If not markup, invoke cdata callback -----------------------
 	    $this->{mode} == $ModeIgnore ?
-		$this->_invoke_cb('IgnDataFunc', $before) :
-		$this->_invoke_cb('CDataFunc', $before);
+		$this->ignored_data($buf) :
+		$this->cdata($buf);
+	    $buf = '';
 	}
 
-        ## End tag
-        if ($type eq $etago_) {
-	    $gi = $m1;
-	    $buf = $after;
-    
-    	    # Get rest of generic identifier
-            if ($buf =~ s/^([$namechars]*)\s*//o) {
-	        $gi .= $1;
-	    }
-        
-            # Read up to tagc
-            ETAG: while (1) {
-                if ($buf =~ /$tagc/o) {
-            	    $buf = $';
-                    last ETAG;
-                }
-                if (!defined($buf = $this->_get_line())) {
-                    $this->_errMsg("Unexpected EOF; end tag not closed");
-                }
-            }
-            $this->_invoke_cb('ETagFunc', $gi);
-            next LOOP;
-        }
-        
-        ## Start tag
-        if ($type eq $stago_) {
-	    $gi = $m1;
-	    $buf = $after;
-    
-    	    # Get rest of generic identifier
-            if ($buf =~ s/^([$namechars]*)//o) {
-	        $gi .= $1;
-	    }
-        
-            # Get attribute specification list and tagc
-            $attr = '';
-            STAG: while (1) {
-                if ($buf =~ /$tagc/o) {
-                    $attr .= $`;  $buf = $';
-                    if (!&SGMLopen_lit($attr)) {
-                        last STAG;
-                    } else {
-			$attr .= $tagc_;
-			next;
-		    }
-                }
-                if (!defined($tmp = $this->_get_line())) {
-                    $this->_errMsg("Unexpected EOF; start tag not finished");
-                    $buf = undef;
-                    last STAG;
-                }
-                $buf .= $tmp;
-            }
-            $this->_invoke_cb('STagFunc', $gi, $attr);
-            next LOOP;
-        }
-        
-        ## Marked section start
-        if ($type eq $dso_) {
-	    $buf = $after;
-	    $tmp = '';
+    }; # End eval
 
-            # Read up to dso
-            MSO: while (1) {
-                if ($buf =~ /$dso/o) {
-            	    $tmp .= $`;  $buf = $';
-                    last MSO;
-                }
-                $tmp .= $buf;
-                if (!defined($buf = $this->_get_line())) {
-                    $this->_errMsg("Unexpected EOF for marked section start");
-                }
-            }
-
-	    if ($tmp =~ /$pero($namechars)/o) {
-		$keyword = $this->_invoke_cb('PERefFunc', $1);
-	    } else {
-		($keyword = $tmp) =~ s/\s//g;
-	    }
-	    $keyword = uc $keyword;
-	    $this->_invoke_cb('MSStartFunc', $keyword, $tmp);
-
-	    if ($keyword eq "IGNORE") {
-		$this->{mode} = $ModeIgnore;
-	    } elsif ($keyword eq "RCDATA" or
-		     $keyword eq "CDATA") {
-		$this->{mode} = $ModeCData;
-	    } else {
-		$this->{_open_ms}++;
-	    }
-
-	    next LOOP;
-	}
-
-        ## Marked section end
-        if ($type eq $msc_) {
-	    $buf = $after;
-	    if ($this->{_open_ms} == 0) {
-		$this->_errMsg("Mark section close w/o a mark section start");
-	    } else {
-		$this->{_open_ms}--;
-	    }
-	    if ($this->{mode} == $ModeIgnore or
-		$this->{mode} == $ModeCData) {
-		$this->{mode} = $ModePCData;
-	    }
-	    $this->_invoke_cb('MSCloseFunc');
-	    next LOOP;
-	}
-
-        ## Processing instruction
-        if ($type eq $pio_) {
-	    $buf = $after;
-            $tmp = '';
-        
-            # Read up to tagc
-            PI: while (1) {
-                if ($buf =~ /$pic/o) {
-            	    $tmp .= $`;  $buf = $';
-                    last PI;
-                }
-                $tmp .= $buf;
-                if (!defined($buf = $this->_get_line())) {
-                    $this->_errMsg("Unexpected EOF; PI not closed");
-                }
-            }
-            $this->_invoke_cb('PIFunc', $tmp);
-            next LOOP;
-        }
-        
-        ## Comment declaration
-        if ($type eq $comm_) {
-            $buf = $after;
-            
-            my(@comms) = ();
-            # Outer loop for comment declaration as a whole
-            COMDCL: while (1) {
-            	$tmp = '';
-                
-                # Inner loop for each comment block in declaration
-                COMM: while (1) {
-                    if ($buf =~ /$comm/o) {
-            	        $tmp .= $`;  $buf = $';
-                        last COMM;
-                    }
-                    $tmp .= $buf;
-                    if (!defined($buf = $this->_get_line())) {
-                        $this->_errMsg("Unexpected EOF; Comment not closed");
-                        last COMM;
-                    }
-                }
-                # Push comment block on list
-                push(@comms, $tmp);
-                last COMM  unless defined($buf);
-                
-                # Check for declaration close or another comment block
-                while ($buf !~ /\S/) {
-                    if (!defined($buf = $this->_get_line())) {
-                        $this->_errMsg("Unexpected EOF; Comment declaration ",
-                        	       "not closed");
-                        last COMDCL;
-                    }
-                }
-                if ($buf =~ s/^\s*$comm//o) {
-                    next COMDCL;
-                } elsif ($buf =~ s/^\s*$mdc//o) {
-                    last COMDCL;
-                } else {	# punt
-                    $this->_errMsg("Invalid cdata outside of comment");
-                    next COMDCL;
-                }
-            }
-            $this->_invoke_cb('CommentFunc', \@comms);
-
-	    next LOOP;
-        }
-    
-    	## If not markup, invoke cdata callback
-	$this->{mode} == $ModeIgnore ?
-	    $this->_invoke_cb('IgnDataFunc', $buf) :
-	    $this->_invoke_cb('CDataFunc', $buf);
-        $buf = '';
-    }
-
-  }; # End eval
+    $this->{_input} = pop(@{$this->{_input_stack}});
 
     # Return buffer.  May contain data if parsing was aborted, otherwise
     # should be undef.
@@ -478,7 +491,7 @@ sub parse_data {
 ##
 sub get_line_no {
     my $this = shift;
-    $this->{_ln};
+    $this->{_input}{_ln};
 }
 
 ##----------------------------------------------------------------------
@@ -488,16 +501,35 @@ sub get_line_no {
 ##
 sub get_input_label {
     my $this = shift;
-    $this->{_label};
+    $this->{_input}{_label};
 }
 
-##----------------------------------------------------------------------
-##	set_abort_flag() is used by callback routines to instruct
-##	parser to abort parsing.
-##
-sub set_abort_flag {
+##########################################################################
+
+##**********************************************************************##
+##	CALLBACK METHODS
+##**********************************************************************##
+##	Subclasses are to redefine callback methods to perform
+##	whatever actions are desired.
+##**********************************************************************##
+
+sub cdata { }
+sub char_ref { }
+sub comment_decl { }
+sub end_tag { }
+sub entity_ref { undef }
+sub ignored_data { }
+sub marked_sect_close { }
+sub marked_sect_open { }
+sub parm_entity_ref { undef }
+sub processing_inst { }
+sub start_tag { }
+sub error {
     my $this = shift;
-    $this->{_abort} = 1;
+    my $label = $this->get_input_label();
+    my $line = $this->get_line_no();
+
+    warn(ref($this), ":$label:Line $line:", @_, "\n");
 }
 
 ##########################################################################
@@ -506,22 +538,6 @@ sub set_abort_flag {
 ##	PRIVATE METHODS
 ##**********************************************************************##
 
-sub _invoke_cb {
-    my $this = shift;
-    my $func = shift;
-    
-    if (defined(&{$rout = $this->{$func}}) ||
-        defined(&{$rout = $$func})) {
-        
-	&$rout($this, @_);
-
-	if ($this->{_abort}) {
-	    $this->{_abort} = 0;
-	    die;	# Captured by eval
-	}
-    }
-}
-
 ##----------------------------------------------------------------------
 ##	_get_line() retrieves the next line from input.  undef is
 ##	returned if end of input is reached.
@@ -529,55 +545,31 @@ sub _invoke_cb {
 sub _get_line {
     my $this = shift;
     my $ret = undef;
+    my $href = $this->{_input};
     my($sref, $fh);
     
-    if (defined($fh = $this->{_fh})) {
+    if (defined($fh = $href->{_fh})) {
         $ret = <$fh>;
         
-    } elsif (defined($sref = $this->{_string})) {
+    } elsif (defined($sref = $href->{_string})) {
     
         if ($$sref =~ s%(.*?${/})%%o) {
             $ret = $1;
         } elsif ($$sref ne '') {
             $ret = $$sref;
-            $this->{_string} = undef;
+            $href->{_string} = undef;
         }
     }
     if (defined($ret)) {
     	if (defined($fh)) {
-	    $this->{_ln} = $.;
+	    $href->{_ln} = $.;
         } else {
-	    $this->{_ln}++;
+	    $href->{_ln}++;
         }
     }
     $ret;
 }
 
-##----------------------------------------------------------------------
-##	_errMsg() prints an error message.
-##
-sub _errMsg {
-    my $this = shift;
-    
-    if (defined($this->{ErrFunc}) || defined($ErrFunc)) {
-    	$this->_invoke_cb('ErrFunc', @_);
-        
-    } else {
-        my $fh = $this->{ErrHandle} || $ErrHandle;
-        
-        if (defined($fh)) {
-	    my $label = $this->{_label};
-	    my $line = $this->{_ln};
-            
-            print $fh (ref($this), ":$label:Line $line:", @_, "\n");
-        }
-    }
-}
-
-##**********************************************************************##
-##	PRIVATE PACKAGE ROUTINES
-##**********************************************************************##
-
-##----------------------------------------------------------------------
+##########################################################################
 1;
 
