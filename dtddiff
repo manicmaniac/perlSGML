@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtddiff,v 1.1 1996/09/30 13:21:08 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtddiff,v 1.2 1996/10/06 20:37:50 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -191,8 +191,8 @@ sub get_cli_opts {
     warn "ERROR: Invalid number of arguments\n";
     &Usage();
     }
-    $COMPACT = (defined($opt_compact) ? 1 : 0);
-    $COMPACT = (defined($opt_nocompact) ? 0 :$COMPACT);
+    $COMPACT = 1;
+    $COMPACT = 0  if defined($opt_nocompact);
     $MAPFILE = $opt_catalog || "catalog";
     $OLDDTD = $ARGV[0];
     $NEWDTD = $ARGV[1];
