@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: stripsgml,v 1.2 1996/09/30 13:40:14 ehood Exp $ %Z%
+##      %Z% %Y% $Id: stripsgml,v 1.3 1996/10/07 11:21:19 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -37,19 +37,22 @@
 package main;
 
 ##---------------------------------------------------------------------------##
-## Store name of program ##
+
 ($PROG = $0) =~ s/.*\///;
 $VERSION = "1.0.0";
 
-## Require libraries ##
+##---------------------------------------------------------------------------##
+##	Require libraries
+##---------------------------------------------------------------------------##
 unshift(@INC, 'lib');
-require "sgml.pl" || die "Unable to require sgml.pl\n";
+require "sgml.pl"	|| die "Unable to require sgml.pl\n";
+require "newgetopt.pl"	|| die "Unable to require newgetopt.pl\n";
 
 ##---------------------------------------------------------------------------##
-## Associative array for entity substitutions
-##
-%Entity = (
+##	Associative array for entity substitutions
+##---------------------------------------------------------------------------##
 
+%Entity = (
 #-----------------------------
 # Numeric and Special Graphic
 #-----------------------------
@@ -262,13 +265,12 @@ require "sgml.pl" || die "Unable to require sgml.pl\n";
     "yuml",	"y",	# small y, dieresis or umlaut mark
     "#255",	"y",
 );
-##---------------------------------------------------------------------------##
-##------------##
-## Begin MAIN ##
-##------------##
-{
 
-$HTML	= 1  if "@ARGV" =~ /-html/;
+##---------------------------------------------------------------------------##
+##	Globals
+##---------------------------------------------------------------------------##
+
+##	Variable to hold current URL
 $Url	= '';
 
 ##	Register callbacks to sgml.pl
@@ -276,15 +278,34 @@ $sgml'CdataFunc		= "main'cdata_cb";
 $sgml'OpenTagFunc	= "main'open_tag_cb";
 $sgml'EndTagFunc	= "main'close_tag_cb";
 
+##---------------------------------------------------------------------------##
+				##------------##
+				## Begin MAIN ##
+				##------------##
+{
+
+&get_cli_opts();
 &SGMLread_sgml(STDIN);
 exit 0;
 
 }
-##----------##
-## End MAIN ##
-##----------##
-
+				##----------##
+				## End MAIN ##
+				##----------##
 ##---------------------------------------------------------------------------##
+##	Routines
+##---------------------------------------------------------------------------##
+
+sub get_cli_opts {
+    &Usage() unless
+    &NGetOpt(
+	"html",		# Generate compact listing
+
+	"help"    	# Help message
+    );
+    &Usage()	if defined($opt_help);
+    $HTML = 1	if defined($opt_html);
+}
 
 sub cdata_cb {
     local(*data) = shift;
@@ -299,6 +320,7 @@ sub open_tag_cb {
     if ($HTML && ($gi =~ /^A$/i)) {
 	if ($attr =~ /href\s*=\s*['"]([^'"]+)['"]/i) {
 	    $Url = $1;
+	    $Url = ''  if $Url =~ /^#/;		# Ignore relative URLs
 	} else {
 	    $Url = '';
 	}
@@ -308,12 +330,39 @@ sub open_tag_cb {
 sub close_tag_cb {
     local($gi) = ($_[0]);
 
-    if ($HTML && ($gi =~ /^A$/i)) {
-	print STDOUT " <URL:$Url>"  if $Url;
+    if ($HTML && ($gi =~ /^A$/i) && $Url) {
+	print STDOUT " <URL:$Url>";
+	$Url = '';
     }
 }
 
 sub expand_ent {
     local($name) = shift;
     defined($Entity{$name}) ? $Entity{$name} : "&$name;";
+}
+
+##---------------------------------------------------------------------------##
+sub Usage {
+    print STDOUT <<EndOfUsage;
+
+Usage:  $PROG [<options>] <  file.sgm  > file.txt
+Options:
+  -html              : Preserve anchor URLs in output
+  -help              : This message
+ 
+Description:
+  stripsgml strips out SGML tags.  Common entity references for special
+  characters are converted to ASCII.  Input is read from standard in, and
+  output is sent to standard out.
+ 
+Version: $VERSION
+dtd.pl Version: $dtd'VERSION
+ 
+  Copyright (C) 1994-1996  Earl Hood, ehood\@medusa.acs.uci.edu
+  stripsgml comes with ABSOLUTELY NO WARRANTY and stripsgml may be copied
+  only under the terms of the GNU General Public License (version 2, or
+  later), which may be found in the distribution.
+EndOfUsage
+
+    exit 0;
 }
