@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--    %Z% $Id: SGML..SOCat.sgml,v 1.1 1997/09/12 20:02:55 ehood Exp $  %Z%
+<!--    %Z% $Id: SGML..SOCat.sgml,v 1.2 1997/09/18 14:32:48 ehood Exp $  %Z%
   -->
 <!-- =================================================================== -->
  
@@ -14,11 +14,13 @@
 </head>
 
 
+<!-- =================================================================== -->
 <hr><h2><a name="Name">Name</a></h2>
 
 <p>SGML::SOCat - SGML Open Catalog parser
 </p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
     use SGML::SOCat;
@@ -33,21 +35,27 @@ or
     $soc->read_handle(\*FILEHADNLE);
 </pre>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Description">Description</a></h2>
 
 <p><strong>SGML::SOCat</strong> is an SGML Open Catalog (as defined
 by <em>SGML Open Technical Resolution 9401:1995</em> and extensions
 defined in <em>SP</em>).  <strong>SGML::SOCat</strong> is designed
 to be used by an entity manager (like <strong>SGML::EntMan</strong>)
-for resolving external entities.
+for resolving external entities.  I.e.  <strong>SGML::SOCat</strong>
+handles the lexical parsing of the catalogs.  It is up to the
+users of the class to define the applicational behavior.
 </p>
 
-<hr><h2><a name="Class Methods">Class Methods</a></h2>
+<!-- =================================================================== -->
+<hr><h2><a name="Class_Methods">Class Methods</a></h2>
  
 <ul>
 <li><a href="#new">new</a></li>
 </ul>
  
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="new">new</a></h3>
 <dl>
  
@@ -58,7 +66,8 @@ for resolving external entities.
  
 </dl>
 
-<hr><h2><a name="Object Methods">Object Methods</a></h2>
+<!-- =================================================================== -->
+<hr><h2><a name="Object_Methods">Object Methods</a></h2>
 
 <p>Some methods of <strong>SGML::SOCat</strong> may return the following
 information: <em>base system identifier in effect</em> and/or
@@ -97,6 +106,8 @@ specified in a document.
 <li><a href="#get_system">get_system</a></li>
 </ul>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="read_file">read_file</a></h3>
 <dl>
 
@@ -108,6 +119,8 @@ passed in.  A 1 is returned on success, and a 0 on failure.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="read_handle">read_handle</a></h3>
 <dl>
 
@@ -124,6 +137,8 @@ as the name of the filehandle for error messages.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_public">get_public</a></h3>
 <dl>
 
@@ -148,6 +163,8 @@ and <em>override flag</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_gen_ent">get_gen_ent</a></h3>
 <dl>
 
@@ -166,6 +183,8 @@ identifier</em>, <em>base system identifier in effect</em>, and
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_parm_ent">get_parm_ent</a></h3>
 <dl>
 
@@ -184,6 +203,8 @@ identifier</em>, <em>base system identifier in effect</em>, and
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_doctype">get_doctype</a></h3>
 <dl>
 
@@ -202,6 +223,8 @@ effect</em>, and <em>override flag</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_linktype">get_linktype</a></h3>
 <dl>
 
@@ -220,6 +243,8 @@ and <em>override flag</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_system">get_system</a></h3>
 <dl>
 
@@ -238,6 +263,8 @@ and <em>override flag</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_sgmldecl">get_sgmldecl</a></h3>
 <dl>
 
@@ -255,12 +282,14 @@ and <em>base system identifier in effect</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_dtddecl">get_dtddecl</a></h3>
 <dl>
 
 <dt><tt>$soc-><strong>get_dtddecl</strong>($pubid)</tt></dt><dd>
 
-<p><strong>get_dtddec</strong> retrieves the sysid for for the SGML
+<p><strong>get_dtddecl</strong> retrieves the sysid for for the SGML
 declaration associated with a doctype external subset <em>public
 indentifier</em>.  In a scalar context, the method returns 1 if there
 is a catalog entry for the public indentifier, else 0 is returned.
@@ -274,6 +303,8 @@ Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_document">get_document</a></h3>
 <dl>
 
@@ -291,6 +322,8 @@ and <em>base system identifier in effect</em>.  Example:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_delegate">get_delegate</a></h3>
 <dl>
 
@@ -324,12 +357,13 @@ perform that function.  For example:
     ($sysid, $base) = $soc_del->get_delegate($pubid);
 </pre>
 
-<p>See <a href="SGML%3A%3AEntMan.html"><strong>SGML::EntMan</strong></a>
+<p>See <a href="SGML..EntMan.html"><strong>SGML::EntMan</strong></a>
 for external entity resolution that automatically handles delegations.
 </p>
 
 </dl>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Notes">Notes</a></h2>
 
 <ul>
@@ -346,10 +380,11 @@ class method), <tt>undef</tt> is returned.
 </p>
 </ul>
 
+<!-- =================================================================== -->
 <hr><h2><a name="See also">See Also</a></h2>
 
 <p>
-<a href="SGML%3A%3AEntMan.html"><strong>SGML::EntMan</strong></a>
+<a href="SGML..EntMan.html"><strong>SGML::EntMan</strong></a>
 </p>
 <p>
 perl(1)
@@ -362,6 +397,6 @@ perl(1)
 <!-- ================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/12 20:02:55 $ 
+$Date: 1997/09/18 14:32:48 $ 
 </address>
 </body></html>

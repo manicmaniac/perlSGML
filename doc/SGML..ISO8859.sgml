@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--    %Z% $Id: SGML..ISO8859.sgml,v 1.1 1997/09/12 20:02:54 ehood Exp $  %Z%
+<!--    %Z% $Id: SGML..ISO8859.sgml,v 1.2 1997/09/18 14:32:45 ehood Exp $  %Z%
   -->
 <!-- =================================================================== -->
  
@@ -14,11 +14,13 @@
 </head>
 
 
+<!-- =================================================================== -->
 <hr><h2><a name="Name">Name</a></h2>
 
 <p>SGML::ISO8859 - routines for handling ISO 8859 character sets
 </p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
   use SGML::ISO8859;
@@ -27,6 +29,7 @@
   $data     = SGML::ISO8859::sgml2str($sgml_str, $charset);
 </pre>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Description">Description</a></h2>
 
 <p><strong>SGML::ISO8859</strong> contains routines for handling ISO 8859
@@ -57,76 +60,66 @@ to import the routines into the current name space.  For example:
 <p>The following routines are available in <strong>SGML::ISO8859</strong>:
 </p>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="str2sgml">str2sgml</a></h3>
 
 <pre>
     $sgml_str =
-    str2sgml(
-	$data,
-	$charset
+    <b>str2sgml</b>(
+	<var>$data</var>,
+	<var>$charset</var>
     );
 </pre>
 
+<h4>Parameters:</h4>
+<dl>
+<dt><var>$data</var></dt><dd>
+The scalar string to convert.
+<dt><var>$charset</var></dt><dd>
+The character set of the string.
+</dl>
+
+<h4>Return:</h4>
+<p>String with all special characters translated to entity references.
+</p>
+
+<h4>Description:</h4>
 <p><strong>str2sgml</strong> converts a string so any
 special characters are converted to the appropriate entity references.
 The characters '&lt;', '&gt;', and '&amp;' will be converted also.
 </p>
 
-<h4>Parameters:</h4>
-
-<dl>
-
-<dt><em>$data</em></dt><dd>
-The scalar string to convert.
-
-<dt><em>$charset</em></dt><dd>
-The character set of the string.
-
-</dl>
-
-<h4>Return:</h4>
-
-<dl>
-
-<dt><em>$sgml_str</em></dt><dd>
-String with all special characters translated to entity references.
-
-</dl>
-
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="sgml2str">sgml2str</a></h3>
 
 <pre>
     $data =
-    sgml2str(
-	$sgml_str,
-	$charset
+    <b>sgml2str</b>(
+	<var>$sgml_str</var>,
+	<var>$charset</var>
     );
 </pre>
 
+<h4>Parameters:</h4>
+<dl>
+<dt><var>$sgml_str</var></dt><dd>
+The scalar string to convert.
+<dt><var>$charset</var></dt><dd>
+The character set to convert string to.
+</dl>
+
+<h4>Return:</h4>
+<p>The "raw" string.
+</p>
+
+<h4>Description:</h4>
 <p><strong>sgml2str</strong> converts a string containing special character
 entity references into a "raw" string.
 </p>
 
-<h4>Parameters:</h4>
-
-<dl>
-
-<dt><em>$sgml_str</em></dt><dd>
-The scalar string to convert.
-
-<dt><em>$charset</em></dt><dd>
-The character set to convert string to.
-
-</dl>
-
-<h4>Return:</h4>
-
-<dl>
-<dt><em>$data</em></dt><dd>
-The "raw" string.
-
-</dl>
-
+<!-- =================================================================== -->
 <hr><h2><a name="Notes">Notes</a></h2>
 
 <ul>
@@ -148,6 +141,7 @@ mappings defined, see the <strong>SGML::ISO8859::S6</strong> and
 
 </ul>
 
+<!-- =================================================================== -->
 <hr><h2><a name="See Also">See Also</a></h2>
 
 <p>
@@ -161,6 +155,6 @@ perl(1)
 <!-- ================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/12 20:02:54 $ 
+$Date: 1997/09/18 14:32:45 $ 
 </address>
 </body></html>

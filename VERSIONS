@@ -1,5 +1,5 @@
 Version list of perlSGML tools
-	$Date: 1997/09/16 15:47:56 $ 
+	$Date: 1997/09/18 14:31:59 $ 
 =============================================================================
 
                                   Programs
@@ -16,7 +16,7 @@ Version list of perlSGML tools
                               Modules (Perl 5)
          SGML::DTD 0.02  -  DTD parser
       SGML::EntMan 0.01  -  Entity manager
-         SGML::FSI 0.03  -  Formal System Indentifiers
+         SGML::FSI 0.04  -  Formal System Indentifiers
      SGML::ISO8859 0.01  -  ISO 8859 character set routines
          SGML::Opt 0.02  -  Command-line option parsing
       SGML::Parser 0.11  -  Document instance parser
@@ -25,5 +25,5 @@ Version list of perlSGML tools
         SGML::Util 0.04  -  General utility routines
 
 =============================================================================
-$Date: 1997/09/16 15:47:56 $ 
+$Date: 1997/09/18 14:31:59 $ 
 Earl Hood, ehood@medusa.acs.uci.edu

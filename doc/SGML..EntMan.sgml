@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--    %Z% $Id: SGML..EntMan.sgml,v 1.1 1997/09/12 20:02:54 ehood Exp $  %Z%
+<!--    %Z% $Id: SGML..EntMan.sgml,v 1.2 1997/09/18 14:32:43 ehood Exp $  %Z%
   -->
 <!-- =================================================================== -->
  
@@ -13,17 +13,21 @@
 <link rev="made" href="mailto:ehood@medusa.acs.uci.edu">
 </head>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Name">Name</a></h2>
 
 <p>SGML::EntMan - SGML entity manager</p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
-  use SGML::EntMan;
-  $entman = new SGML::EntMan
-  $entman->read_catalog($file);
-  $entman->read_catalog_handle(\*FILEHANDLE);
+    use SGML::EntMan;
+    $entman = new SGML::EntMan
+    $entman->read_catalog($file);
+    $entman->read_catalog_handle(\*FILEHANDLE);
 </pre>
+
+<!-- =================================================================== -->
 <hr><h2><a name="Description">Description</a></h2>
 
 <p><strong>SGML::EntMan</strong> is a simple SGML entity manager.
@@ -48,12 +52,15 @@ methods override mappings defined through the
 <strong>SGML_CATALOG_FILES</strong> envariable.
 </p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Class Methods">Class Methods</a></h2>
 
 <ul>
 <li><a href="#new">new</a></li>
 </ul>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="new">new</a></h3>
 <dl>
 
@@ -64,6 +71,7 @@ methods override mappings defined through the
 
 </dl>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Object Methods">Object Methods</a></h2>
 
 <ul>
@@ -75,6 +83,8 @@ methods override mappings defined through the
 <li><a href="#open_system_id">open_system_id</a></li>
 </ul>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="read_catalog">read_catalog</a></h3>
 <dl>
 
@@ -85,6 +95,8 @@ on success, and a 0 on failure.
 </p>
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="read_catalog_handle">read_catalog_handle</a></h3>
 <dl>
 
@@ -95,6 +107,8 @@ on success, and a 0 on failure.
 </p>
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="open_entity">open_entity</a></h3>
 <dl>
 
@@ -111,6 +125,8 @@ entity name.
 </p>
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="open_doctype">open_doctype</a></h3>
 <dl>
 
@@ -123,6 +139,8 @@ message is printed to STDERR.
 </p>
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="open_public_id">open_public_id</a></h3>
 <dl>
 
@@ -133,6 +151,8 @@ could not be resolved, and a warning message is printed to STDERR.
 </p>
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="open_system_id">open_system_id</a></h3>
 <dl>
 
@@ -144,6 +164,7 @@ could not be resolved, and a warning message is printed to STDERR.
 </p>
 </dl>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Environment Variables">Environment Variables</a></h2>
 
 <dl>
@@ -154,11 +175,12 @@ List of default catalogs.
 
 </dl>
 
+<!-- =================================================================== -->
 <hr><H2><a name="See Also">See Also</a></h2>
 
 <p>
-<a href="SGML%3A%3ADTD.html"><strong>SGML::DTD</strong></a>,
-<a href="SGML%3A%3AFSI.html"><strong>SGML::FSI</strong></a>
+<a href="SGML..DTD.html"><strong>SGML::DTD</strong></a>,
+<a href="SGML..FSI.html"><strong>SGML::FSI</strong></a>
 </p>
 <p>
 perl(1)
@@ -171,6 +193,6 @@ perl(1)
 <!-- ================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/12 20:02:54 $ 
+$Date: 1997/09/18 14:32:43 $ 
 </address>
 </body></html>

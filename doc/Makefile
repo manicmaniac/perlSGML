@@ -1,42 +1,42 @@
-# 	%Z% %Y% $Id: Makefile,v 1.4 1997/09/12 20:14:16 ehood Exp $ %Z%
+# 	%Z% %Y% $Id: Makefile,v 1.5 1997/09/18 14:32:41 ehood Exp $ %Z%
 #
 
 SGMLDOCS = \
-    SGML::DTD.sgml \
-    SGML::EntMan.sgml \
-    SGML::FSI.sgml \
-    SGML::ISO8859.sgml \
-    SGML::Opt.sgml \
-    SGML::Parser.sgml \
-    SGML::SOCat.sgml \
-    SGML::StripParser.sgml \
-    SGML::Util.sgml \
+    SGML..DTD.sgml \
+    SGML..EntMan.sgml \
+    SGML..FSI.sgml \
+    SGML..ISO8859.sgml \
+    SGML..Opt.sgml \
+    SGML..Parser.sgml \
+    SGML..SOCat.sgml \
+    SGML..StripParser.sgml \
+    SGML..Util.sgml \
     dtd2html.sgml \
-    dtd_pl.sgml \
+    dtd.pl.sgml \
     dtddiff.sgml \
     dtdtree.sgml \
     dtdview.sgml \
     perlSGML.sgml \
-    sgml_pl.sgml \
+    sgml.pl.sgml \
     stripsgml.sgml
 
 HTMLDOCS = \
-    SGML::DTD.html \
-    SGML::EntMan.html \
-    SGML::FSI.html \
-    SGML::ISO8859.html \
-    SGML::Opt.html \
-    SGML::Parser.html \
-    SGML::SOCat.html \
-    SGML::StripParser.html \
-    SGML::Util.html \
+    SGML..DTD.html \
+    SGML..EntMan.html \
+    SGML..FSI.html \
+    SGML..ISO8859.html \
+    SGML..Opt.html \
+    SGML..Parser.html \
+    SGML..SOCat.html \
+    SGML..StripParser.html \
+    SGML..Util.html \
     dtd2html.html \
-    dtd_pl.html \
+    dtd.pl.html \
     dtddiff.html \
     dtdtree.html \
     dtdview.html \
     perlSGML.html \
-    sgml_pl.html \
+    sgml.pl.html \
     stripsgml.html
 
 PERLMODS = \
@@ -53,7 +53,7 @@ PERLMODS = \
 
 all:
 	/bin/csh -f sgml2html $(SGMLDOCS)
-	chmod -R a+r,a+X .
+	@chmod -R a+r,a+X .
 
 check:
 	@for i in $(SGMLDOCS) ; \

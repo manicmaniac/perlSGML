@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--    %Z% $Id: SGML..Util.sgml,v 1.1 1997/09/12 20:02:56 ehood Exp $  %Z%
+<!--    %Z% $Id: SGML..Util.sgml,v 1.2 1997/09/18 14:32:49 ehood Exp $  %Z%
   -->
 <!-- =================================================================== -->
  
@@ -14,11 +14,13 @@
 </head>
 
 
+<!-- =================================================================== -->
 <hr><h2><a name="Name">Name</a></h2>
 
 <p>SGML::Util - miscellaneous utility functions for SGML processing
 </p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
     use SGML::Util;
@@ -27,6 +29,7 @@
     if (SGMLopen_lit($str)) { ... }
 </pre>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Description">Description</a></h2>
 
 <p><strong>SGML::Util</strong> contains miscellaneous utility functions
@@ -34,19 +37,20 @@ related to SGML processing.  The following functions are exported
 by <strong>SGML::Util</strong>:
 </p>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="SGMLparse_attr_spec">SGMLparse_attr_spec</a></h3>
 <pre>
-    @nv_list = <strong>SGMLparse_attr_spec</strong>(<em>$attr_spec</em>);
-    %attrs   = <strong>SGMLparse_attr_spec</strong>(<em>$attr_spec</em>);
+    @nv_list = <strong>SGMLparse_attr_spec</strong>(<var>$attr_spec</var>);
+    %attrs   = <strong>SGMLparse_attr_spec</strong>(<var>$attr_spec</var>);
 </pre>
 
 <h4>Arguments:</h4>
 <dl>
-<dt><em>$attr_spec</em></dt><dd>
-<p>A scalar string representing the SGML attribute specificaion list.
+<dt><var>$attr_spec</var></dt>
+<dd>A scalar string representing the SGML attribute specificaion list.
 The <em>stago</em>, <em>gi</em>, and <em>etago</em> should NOT be in
 the specification list string.
-</p>
 </dd>
 </dl>
 
@@ -56,10 +60,14 @@ the specification list string.
 
 <h4>Description:</h4>
 <p><strong>SGMLparse_attr_spec</strong> takes a attribute specification
-string and parses it into a list of name/value pairs.
+string and parses it into a list of name/value pairs.  An example
+attribute specification string:
 </p>
+<pre>
+    border=0 WIDTH="100%" CellSpacing=2 cellpadding = '4'
+</pre>
 
-<p>Any non-whitespace character in <em>$attr_spec</em> is treated as
+<p>Any non-whitespace character in <var>$attr_spec</var> is treated as
 a name character.  This allows the parsing of SGML-like markup.
 For example, the following will not generate a complaint:
 </p>
@@ -82,16 +90,18 @@ name indicator ('<tt>#</tt>' in the reference concrete syntax) with a number
 appended (eg. "<tt>#4</tt>").  This is to handle the case when SHORTTAG is YES.
 </p>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="SGMLattr_to_sgml">SGMLattr_to_sgml</a></h3>
 <pre>
-    $attr_spec = <strong>SGMLattr_to_sgml</strong>(<em>\%attrs</em>);
-    $attr_spec = <strong>SGMLattr_to_sgml</strong>(<em>\@nv_list</em>);
+    $attr_spec = <strong>SGMLattr_to_sgml</strong>(<var>\%attrs</var>);
+    $attr_spec = <strong>SGMLattr_to_sgml</strong>(<var>\@nv_list</var>);
 </pre>
 
 <h4>Arguments:</h4>
 <dl>
-<dt><em>\%attrs</em></dt>
-<dt><em>\@nv_list</em></dt>
+<dt><var>\%attrs</var></dt>
+<dt><var>\@nv_list</var></dt>
 <dd>A reference to a hash or an array.  If a hash, the keys represent the
 names and the values the attribute values.  If an array, the array
 is interpreted as a sequence of name/value pairs.
@@ -113,16 +123,18 @@ printed.  This is to handle the case when SHORTTAG is YES.
 </p>
 
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="SGMLopen_lit">SGMLopen_lit</a></h3>
 <pre>
-    if (<strong>SGMLopen_lit</strong>($str)) {
+    if (<strong>SGMLopen_lit</strong>(<var>$str</var>)) {
 	# ...
     }
 </pre>
 
 <h4>Parameters</h4>
 <dl>
-<dt><em>$str</em></dt><dd>
+<dt><var>$str</var></dt><dd>
 Scalar string to check.
 </dl>
 
@@ -137,10 +149,11 @@ quote, the routine will return true.
 </p>
 
 
+<!-- =================================================================== -->
 <hr><h2><a name="See Also">See Also</a></h2>
 
 <p>
-<a href="SGML%3A%3AParser.html"><strong>SGML::Parser</strong></a>
+<a href="SGML..Parser.html"><strong>SGML::Parser</strong></a>
 </p>
 <p>
 perl(1)
@@ -153,6 +166,6 @@ perl(1)
 <!-- ================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/12 20:02:56 $ 
+$Date: 1997/09/18 14:32:49 $ 
 </address>
 </body></html>

@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: perlSGML.sgml,v 1.3 1997/09/16 15:02:35 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: perlSGML.sgml,v 1.4 1997/09/18 14:32:50 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -51,50 +51,50 @@ in the <em>perlSGML</em> distribution:
 <th align=center colspan=3><br><strong>Libraries</strong> (Perl 4)</th>
 <tr valign=top>
 <th align=right><a name="dtd.pl"
-       href="dtd_pl.html">dtd.pl</a></th><td>2.4.1&nbsp;-</td>
+       href="dtd.pl.html">dtd.pl</a></th><td>2.4.1&nbsp;-</td>
 <td>DTD parser</td>
 <tr valign=top>
 <th align=right><a name="sgml.pl"
-       href="sgml_pl.html">sgml.pl</a></th><td>1.0.0&nbsp;-</td>
+       href="sgml.pl.html">sgml.pl</a></th><td>1.0.0&nbsp;-</td>
 <td>Simple document instance parser</td>
 
 <tr valign=top>
 <th align=center colspan=3><br><strong>Modules</strong> (Perl 5)</th>
 <tr valign=top>
 <th align=right><a name="SGML::DTD" 
-       href="SGML::DTD.html">SGML::DTD</a></th><td>0.02&nbsp;-</td>
+       href="SGML..DTD.html">SGML::DTD</a></th><td>0.02&nbsp;-</td>
 <td>DTD parser</td>
 <tr valign=top>
 <th align=right><a name="SGML::EntMan" 
-       href="SGML::EntMan.html">SGML::EntMan</a></th><td>0.01&nbsp;-</td>
+       href="SGML..EntMan.html">SGML::EntMan</a></th><td>0.01&nbsp;-</td>
 <td>Entity manager</td>
 <tr valign=top>
 <th align=right><a name="SGML::FSI" 
-       href="SGML::FSI.html">SGML::FSI</a></th><td>0.03&nbsp;-</td>
+       href="SGML..FSI.html">SGML::FSI</a></th><td>0.04&nbsp;-</td>
 <td>Formal System Indentifiers</td>
 <tr valign=top>
 <th align=right><a name="SGML::ISO8859" 
-       href="SGML::ISO8859.html">SGML::ISO8859</a></th><td>0.01&nbsp;-</td>
+       href="SGML..ISO8859.html">SGML::ISO8859</a></th><td>0.01&nbsp;-</td>
 <td>ISO 8859 character set routines</td>
 <tr valign=top>
 <th align=right><a name="SGML::Opt" 
-       href="SGML::Opt.html">SGML::Opt</a></th><td>0.02&nbsp;-</td>
+       href="SGML..Opt.html">SGML::Opt</a></th><td>0.02&nbsp;-</td>
 <td>Command-line option parsing</td>
 <tr valign=top>
 <th align=right><a name="SGML::Parser" 
-       href="SGML::Parser.html">SGML::Parser</a></th><td>0.11&nbsp;-</td>
+       href="SGML..Parser.html">SGML::Parser</a></th><td>0.11&nbsp;-</td>
 <td>Document instance parser</td>
 <tr valign=top>
 <th align=right><a name="SGML::SOCat" 
-       href="SGML::SOCat.html">SGML::SOCat</a></th><td>0.02&nbsp;-</td>
+       href="SGML..SOCat.html">SGML::SOCat</a></th><td>0.02&nbsp;-</td>
 <td>SGML Open Catalog parser</td>
 <tr valign=top>
 <th align=right><a name="SGML::StripParser" 
-       href="SGML::StripParser.html">SGML::StripParser</a></th><td>0.01&nbsp;-</td>
+       href="SGML..StripParser.html">SGML::StripParser</a></th><td>0.01&nbsp;-</td>
 <td>Remove tags from document instances</td>
 <tr valign=top>
 <th align=right><a name="SGML::Util" 
-       href="SGML::Util.html">SGML::Util</a></th><td>0.04&nbsp;-</td>
+       href="SGML..Util.html">SGML::Util</a></th><td>0.04&nbsp;-</td>
 <td>General utility routines</td>
 
 </table>
@@ -113,7 +113,7 @@ see (<a href="http://www.oac.uci.edu/indiv/ehood/perlSGML.html"
 <!-- =================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/16 15:02:35 $ 
+$Date: 1997/09/18 14:32:50 $ 
 </address>
 </body>
 </html>

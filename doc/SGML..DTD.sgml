@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--    %Z% $Id: SGML..DTD.sgml,v 1.1 1997/09/12 20:02:53 ehood Exp $  %Z%
+<!--    %Z% $Id: SGML..DTD.sgml,v 1.2 1997/09/18 14:32:42 ehood Exp $  %Z%
   -->
 <!-- =================================================================== -->
  
@@ -13,11 +13,13 @@
 <link rev="made" href="mailto:ehood@medusa.acs.uci.edu">
 </head>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Name">Name</a></h2>
 
 <p>SGML::DTD - SGML DTD parser
 </p>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
     use SGML::DTD;
@@ -34,6 +36,7 @@
     $dtd = new SGML::DTD \*FILEHANDLE, $entity_manager;
 </pre>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Description">Description</a></h2>
 
 <p><strong>SGML::DTD</strong> is an SGML DTD parser.  Either during
@@ -123,6 +126,7 @@ names are case-sensitive.
 
 </ul>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Class Methods">Class Methods</a></h2>
 
 <p>Class methods are methods that apply at the class level.  Therefore,
@@ -158,6 +162,8 @@ Class methods can be invoked like the following:
 <li><a href="#set_verbosity">set_verbosity</a></li>
 </ul>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="new">new</a></h3>
 
 <dl>
@@ -179,6 +185,8 @@ any external entity references.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_attr_keyword">is_attr_keyword</a></h3>
 
 <dl>
@@ -214,6 +222,8 @@ will return 1:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_elem_keyword">is_elem_keyword</a></h3>
 
 <dl>
@@ -238,6 +248,8 @@ concrete syntax, the following values of $word will return 1:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_group_connector">is_group_connector</a></h3>
 
 <dl>
@@ -258,6 +270,8 @@ otherwise, it returns 0. The following values of $char will return 1:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_occur_indicator">is_occur_indicator</a></h3>
 
 <dl>
@@ -278,6 +292,8 @@ otherwise, it returns 0. The following values of $char will return 1:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_tag_name">is_tag_name</a></h3>
 
 <dl>
@@ -296,6 +312,8 @@ variable. By default, a tag name may only contain the characters
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_comment_callback">set_comment_callback</a></h3>
 
 <dl>
@@ -314,6 +332,8 @@ is encountered.  The comment callback function is invoked as follows:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_debug_callback">set_debug_callback</a></h3>
 
 <dl>
@@ -334,6 +354,8 @@ The debug callback function is invoked as follows:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_debug_handle">set_debug_handle</a></h3>
 
 <dl>
@@ -350,6 +372,8 @@ The default filehandle is <tt>STDERR</tt>.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_ent_manager">set_ent_manager</a></h3>
 
 <dl>
@@ -366,6 +390,8 @@ be of type <strong>SGML::EntMan</strong>.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_err_callback">set_err_callback</a></h3>
 
 <dl>
@@ -384,6 +410,8 @@ The error callback function is invoked as follows:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_err_handle">set_err_handle</a></h3>
 
 <dl>
@@ -400,6 +428,8 @@ The default filehandle is <tt>STDERR</tt>.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_pi_callback">set_pi_callback</a></h3>
 
 <dl>
@@ -418,6 +448,8 @@ is encountered.  The pi callback function is invoked as follows:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_tree_callback">set_tree_callback</a></h3>
 
 <dl>
@@ -443,6 +475,8 @@ specific application, so its use is discouraged.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="set_verbosity">set_verbosity</a></h3>
 
 <dl>
@@ -458,8 +492,7 @@ messages as it parses a DTD.
 
 </dl>
 
-<!-- ================================================================== -->
-
+<!-- =================================================================== -->
 <hr><h2><a name="Object Methods">Object Methods</a></h2>
 
 <ul>
@@ -480,6 +513,8 @@ messages as it parses a DTD.
 <li><a href="#reset">reset</a></li>
 </ul>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="read_dtd">read_dtd</a></h3>
 
 <dl>
@@ -494,6 +529,8 @@ messages as it parses a DTD.
 
 <p>The following methods are applicable after a DTD has been parsed:
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_base_children">get_base_children</a></h3>
 
 <dl>
@@ -534,6 +571,8 @@ flag if the connector characters are included in the returned array:
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_elem_attr">get_elem_attr</a></h3>
 
 <dl>
@@ -552,6 +591,8 @@ The other array values are all possible values for the attribute.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_elements">get_elements</a></h3>
 
 <dl>
@@ -566,6 +607,8 @@ DTD.  Otherwise, they are in sorted order.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_elements_of_attr">get_elements_of_attr</a></h3>
 
 <dl>
@@ -579,6 +622,8 @@ in the DTD.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_exc_children">get_exc_children</a></h3>
 
 <dl>
@@ -610,6 +655,8 @@ characters are included in the returned array: 0 => no connectors, 1
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_gen_ents">get_gen_ents</a></h3>
 
 <dl>
@@ -624,6 +671,8 @@ not sorted.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_gen_data_ents">get_gen_data_ents</a></h3>
 
 <dl>
@@ -642,6 +691,8 @@ entities defined in the DTD.  Data entities cover the following: </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_inc_children">get_inc_children</a></h3>
 
 <dl>
@@ -672,6 +723,8 @@ array: 0 => no connectors, 1 (non-zero) => connectors.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_parents">get_parents</a></h3>
 
 <dl>
@@ -684,6 +737,8 @@ array: 0 => no connectors, 1 (non-zero) => connectors.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="get_top_elements">get_top_elements</a></h3>
 
 <dl>
@@ -698,6 +753,8 @@ can only be contained within itself.
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_child">is_child</a></h3>
 
 <dl>
@@ -710,6 +767,8 @@ legal child of <em>$element</em>.  Otherwise, 0 is returned.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="is_element">is_element</a></h3>
 
 <dl>
@@ -722,6 +781,8 @@ defined in the DTD. Otherwise, 0 is returned.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="print_tree">print_tree</a></h3>
 
 <dl>
@@ -736,6 +797,8 @@ for information on output created by <strong>print_tree</strong>.  </p>
 
 </dl>
 
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<hr size=0 width="50%" align=left noshade>
 <h3><a name="reset">reset</a></h3>
 
 <dl>
@@ -748,6 +811,7 @@ the same object to parse another DTD.  </p>
 
 </dl>
 
+<!-- =================================================================== -->
 <hr><h2><a name="Element Trees">Element Trees</a></h2>
 
 <p>Once a DTD is parsed, the <strong>print_tree</strong> method
@@ -765,10 +829,11 @@ the output goes to.  </p>
 
 &tree;
 
+<!-- =================================================================== -->
 <hr><h2><a name="See Also">See Also</a></h2>
 
 <p>
-<a href="SGML%3A%3AEntMan.html"><strong>SGML::EntMan</strong></a>
+<a href="SGML..EntMan.html"><strong>SGML::EntMan</strong></a>
 </p>
 <p>
 perl(1)
@@ -781,6 +846,6 @@ perl(1)
 <!-- ================================================================== -->
 <hr>
 <address>
-$Date: 1997/09/12 20:02:53 $ 
+$Date: 1997/09/18 14:32:42 $ 
 </address>
 </body></html>
