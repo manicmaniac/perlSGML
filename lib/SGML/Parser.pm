@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: Parser.pm,v 1.5 1997/01/09 13:12:09 ehood Exp $  %Z%
+##      %Z% $Id: Parser.pm,v 1.6 1997/01/16 16:18:06 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -38,6 +38,9 @@
 ##########################################################################
 
 package SGML::Parser;
+
+use vars qw(@ISA $VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS 
+	    $CDataFunc $STagFunc $ETagFunc $PIFunc $CommentFunc);
 
 use Exporter ();
 @ISA = qw( Exporter );
@@ -296,7 +299,7 @@ sub parse_data {
         if ($type eq $comm_) {
             $buf = $after;
             
-            my @comms;
+            my(@comms) = ();
             # Outer loop for comment declaration as a whole
             COMDCL: while (1) {
             	$tmp = '';
@@ -335,6 +338,8 @@ sub parse_data {
                 }
             }
             $this->_invoke_cb('CommentFunc', \@comms);
+
+	    next LOOP;
         }
     
     	## If not markup, invoke cdata callback
