@@ -1,10 +1,10 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: DTD.pm,v 1.2 1996/11/13 15:28:21 ehood Exp $ %Z%
+##      %Z% %Y% $Id: DTD.pm,v 1.3 1996/11/14 13:28:21 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
-##      This file defines the DTD class.
+##      This file defines the SGML::DTD class.
 ##---------------------------------------------------------------------------##
 ##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
 ##
@@ -32,255 +32,61 @@
 ##
 ##---------------------------------------------------------------------------##
 
-package DTD;
+package SGML::DTD;
 
+## Import delimiters and keywords needed for parsing
+use SGML::Syntax qw(:Delims :Keywords);
+
+## Derive from Exporter
 use Exporter ();
 @ISA = qw(Exporter);
 
-## List what names are exported
-%EXPORT_TAGS = (
-    Default	=> [
-	'get_base_children',	# Get base elements of an element
-	'get_elem_attr',	# Get attributes for an element
-	'get_elements',		# Get array of all elements
-	'get_elements_of_attr',	# Get array of elements that have attribute
-	'get_exc_children', 	# Get exclusion elements of an element
-	'get_gen_ents',		# Get general entities defined in DTD
-	'get_gen_data_ents',	# Get general entities: {PC,C,S}DATA, PI
-	'get_inc_children', 	# Get inclusion elements of an element
-	'get_parents',		# Get parent elements of an element
-	'get_top_elements', 	# Get top-most elements
-	'is_attr_keyword',	# Check for reserved attribute value
-	'is_child', 		# Check if child of element
-	'is_elem_keyword',	# Check for reserved element value
-	'is_element',		# Check if element defined in DTD
-	'is_group_connector',	# Check for group connector
-	'is_occur_indicator',	# Check for occurrence indicator
-	'is_tag_name',		# Check for legal tag name.
-	'print_tree',		# Output content tree for an element
-	'read_dtd', 		# Parse a SGML dtd
-	'read_catalog_files',	# Parse a set of entity map files
-	'read_mapfile',		# Parse entity map file
-	'reset',		# Reset all internal data for DTD
-    ],
-    ParseHooks	=> [
-	'set_comment_callback', # Set SGML comment callback
-	'set_debug_callback',	# Set debug callback
-	'set_debug_handle', 	# Set debug filehandle
-	'set_err_callback', 	# Set error callback
-	'set_err_handle',	# Set error filehandle
-	'set_pi_callback',	# Set processing instruction callback
-	'set_tree_callback',	# Set callback for printing a tree entry
-	'set_verbosity', 	# Set verbosity flag
-    ],
-    Delims	=> [
-	qw( mdo mdo_ mdc mdc_ mdo1char mdo2char
-	    pio pio_ pic pic_ pio1char pio2char
-	    stago stago_ etago etago_ tagc tagc_
-	    msc msc_
-	    rni rni_
-	    ero ero_ pero pero_ cro cro_ refc refc_
-	    dso dso_ dsc dsc_
-	    comm comm_ como como_ comc comc_ comchar
-	    grpo grpo_ grpc grpc_ seq seq_ and and_ or or_
-	    opt opt_ plus plus_ rep rep_
-	    inc inc_ exc exc_
-	    quotes lit lit_ lita lita_
-	  )
-    ],
-);
 @EXPORT = ();
 @EXPORT_OK = ();
-Exporter::export_tags('Default');
-Exporter::export_ok_tags('ParseHooks');
-Exporter::export_ok_tags('Delims');
+%EXPORT_TAGS = ();
+$VERSION = 0.01;
 
-$VERSION = "0.01";
+##---------------------------------------------------------------------------##
+##  Object methods
+##  --------------
+##	get_base_children	=> Get base elements of an element
+##	get_elem_attr   	=> Get attributes for an element
+##	get_elements		=> Get array of all elements
+##	get_elements_of_attr	=> Get array of elements that have attribute
+##	get_exc_children 	=> Get exclusion elements of an element
+##	get_gen_ents		=> Get general entities defined in DTD
+##	get_gen_data_ents	=> Get general entities: {PC,C,S}DATA, PI
+##	get_inc_children 	=> Get inclusion elements of an element
+##	get_parents		=> Get parent elements of an element
+##	get_top_elements 	=> Get top-most elements
+##	is_attr_keyword 	=> Check for reserved attribute value
+##	is_child 		=> Check if child of element
+##	is_elem_keyword 	=> Check for reserved element value
+##	is_element		=> Check if element defined in DTD
+##	is_group_connector	=> Check for group connector
+##	is_occur_indicator	=> Check for occurrence indicator
+##	is_tag_name		=> Check for legal tag name.
+##	print_tree		=> Output content tree for an element
+##	read_dtd 		=> Parse a SGML dtd
+##	read_catalog_files	=> Parse a set of entity map files
+##	read_mapfile		=> Parse entity map file
+##	reset   		=> Reset all internal data for DTD
+## 
+##  Class methods
+##  -------------
+##	set_comment_callback    => Set SGML comment callback
+##	set_debug_callback	=> Set debug callback
+##	set_debug_handle 	=> Set debug filehandle
+##	set_err_callback 	=> Set error callback
+##	set_err_handle  	=> Set error filehandle
+##	set_pi_callback 	=> Set processing instruction callback
+##	set_tree_callback	=> Set callback for printing a tree entry
+##	set_verbosity   	=> Set verbosity flag
+##---------------------------------------------------------------------------##
 
 ##***************************************************************************##
 ##			       CLASS VARIABLES				     ##
 ##***************************************************************************##
-##-------------------------##
-## SGML key word variables ##
-##-------------------------##
-$ANY		= "ANY";
-$ATTLIST	= "ATTLIST";
-$CDATA		= "CDATA";
-$COMMENT	= "--";
-$CONREF		= "CONREF";
-$CURRENT	= "CURRENT";
-$DOCTYPE	= "DOCTYPE";
-$ELEMENT	= "ELEMENT";
-$EMPTY		= "EMPTY";
-$ENDTAG		= "ENDTAG";
-$ENTITY		= "ENTITY";
-$ENTITIES	= "ENTITIES";
-$FIXED		= "FIXED";
-$ID		= "ID";
-$IDREF		= "IDREF";
-$IDREFS		= "IDREFS";
-$IGNORE		= "IGNORE";
-$IMPLIED	= "IMPLIED";
-$INCLUDE	= "INCLUDE";
-$LINK		= "LINK";
-$LINKTYPE	= "LINKTYPE";
-$MD		= "MD";
-$MS		= "MS";
-$NAME		= "NAME";
-$NAMES		= "NAMES";
-$NDATA		= "NDATA";
-$NMTOKEN	= "NMTOKEN";
-$NMTOKENS	= "NMTOKENS";
-$NOTATION	= "NOTATION";
-$NUMBER		= "NUMBER";
-$NUMBERS	= "NUMBERS";
-$NUTOKEN	= "NUTOKEN";
-$NUTOKENS	= "NUTOKENS";
-$PCDATA		= "PCDATA";
-$PI		= "PI";
-$PUBLIC		= "PUBLIC";
-$RCDATA		= "RCDATA";
-$REQUIRED	= "REQUIRED";
-$SDATA		= "SDATA";
-$SHORTREF	= "SHORTREF";
-$SIMPLE		= "SIMPLE";
-$STARTTAG	= "STARTTAG";
-$SUBDOC		= "SUBDOC";
-$SYSTEM		= "SYSTEM";
-$TEMP		= "TEMP";
-$TEXT		= "TEXT";
-$USELINK	= "USELINK";
-$USEMAP		= "USEMAP";
-
-##------------------------------##
-## SGML key character variables ##
-##------------------------------##
-## NOTE: Some variables have '\' characters because those variables are
-##	 normally used in a Perl regular expression.  The variables 
-##	 with the '_' appended to the end, are the non-escaped version
-##	 of the variable.
-##
-## NOTE: If modifiy variables to support an alternative syntax, the
-##	 first character of MDO and PIO must be the same.  The parsing
-##	 routines require this.  Also, MDO and PIO are assumed to be
-##	 2 characters in length.
-
-$mdo	= '<!';		# Markup declaration open
-$mdo_	= '<!';
-$mdc	= '>';		# Markup declaration close
-$mdc_	= '>';
-$mdo1char = '<';	# This should also equal the first character in $pio
-$mdo2char = '!';
-
-$pio	= '<\?';	# Processing instruction open
-$pio_	= '<?';
-$pic	= '>';		# Processing instruction close
-$pic_	= '>';
-$pio1char = '<';
-$pio2char = '?';
-
-$stago	= '<';		# Start tag open
-$stago_	= '<';
-$etago	= '</';		# End tag open
-$etago_	= '</';
-$tagc	= '>';		# Tag close
-$tagc_	= '>';
-
-$msc	= '\]\]';	# Marked section close
-$msc_	= ']]';
-
-$rni	= '#';		# Reserved name indicator
-$rni_	= '#';
-
-$ero	= '&';		# General entity reference open
-$ero_	= '&';
-$pero	= '%';		# Parameter entity reference open
-$pero_	= '%';
-$cro	= '&#';		# Character reference open
-$cro_	= '&#';
-$refc	= ';';		# Reference close
-$refc_	= ';';
-
-$dso	= '\[';		# Doc type declaration subset open
-$dso_	= '[';
-$dsc	= '\]';		# Doc type declaration subset close
-$dsc_	= ']';
-
-## NOTE: It is not recommended to modify the comment delimiters.  The
-##	 parsing routines require that the delimiters are 2 characters
-##	 long, and the 2 characters are the same.
-
-$comm	= '--';		# Comment
-$comm_	= '--';
-$como	= '--';		# Comment open
-$como_	= '--';
-$comc	= '--';		# Comment close (should be same as $como);
-$comc_	= '--';
-$comchar = '-';
-
-$grpo	= '\(';		# Group open
-$grpo_	= '(';
-$grpc	= '\)';		# Group close
-$grpc_	= ')';
-$seq	= ',';		# Sequence connector
-$seq_	= ',';
-$and	= '&';		# And connector
-$and_	= '&';
-$or	= '\|';		# Or connector
-$or_	= '|';
-$opt	= '\?';		# Occurs zero or one time
-$opt_	= '?';
-$plus	= '\+';		# Occurs one or more times
-$plus_	= '+';
-$rep	= '\*';		# Occurs zero or more times
-$rep_	= '*';
-$inc	= '\+';		# Inclusion
-$inc_	= '+';
-$exc	= '-';		# Exclusion
-$exc_	= '-';
-
-$quotes	= q/'"/;	# Quote characters
-$lit	= q/"/;
-$lit_	= q/"/;
-$lita	= q/'/;
-$lita_	= q/'/;
-
-##---------------------##
-## SGML misc variables ##
-##---------------------##
-$namechars = '\w-\.';	# Regular expr repesenting characters in tag/entity
-			# names.  Changing this can effect how attribute
-			# values get stored (see do_attlist() routine).
-
-%CharEntity = (		# Character entities
-    'RE',	"\r",		# Record end
-    'RS',	"\n",		# Record start
-    'SPACE',	" ",		# Space
-    'TAB',	"\t",		# Tab
-    '34',	'"',		# Double quote
-    '35',	'#',		# Number sign
-    '37',	'%',		# Percent
-    '39',	"'",		# Single quote
-    '40',	'(',		# Left paren
-    '41',	')',		# Right paren
-    '42',	'*',		# Asterix
-    '43',	'+',		# Plus
-    '44',	',',		# Comma
-    '45',	'-',		# Minus/hyphen
-    '58',	':',		# Colon
-    '59',	';',		# Semi-colon
-    '61',	'=',		# Equal sign
-    '64',	'@',		# At sign
-    '91',	'[',		# Left square bracket
-    '93',	']',		# Right square bracket
-    '94',	'^',		# Carret
-    '95',	'_',		# Underscore
-    '123',	'{',		# Left curly brace
-    '124',	'|',		# Vertical bar
-    '125',	'}',		# Right curly brace
-    '126',	'~',		# Tilde
-);
-
 ##--------------------##
 ## Internal variables ##
 ##--------------------##
@@ -695,7 +501,7 @@ sub read_dtd {
     my($old) = select($handle);
 
     ## Eval main loop to catch fatal errors
-    eval q{
+    eval {
       DTDBLK: {
 	$include = $IncMS unless $include;
 	if ($include == $IgnMS) {		# Do nothing if ignoring
