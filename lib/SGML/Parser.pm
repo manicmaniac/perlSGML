@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Parser.pm,v 1.1 1996/12/23 12:42:34 ehood Exp $  %Z%
+##      %Z% %Y% $Id: Parser.pm,v 1.2 1996/12/23 12:53:22 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -47,6 +47,7 @@ $VERSION = "0.01";
 %EXPORT_TAGS = ();
 
 use SGML::Syntax qw(:Delims);
+use SGML::Util;
 
 ##########################################################################
 
@@ -253,7 +254,7 @@ sub parse_data {
             STAG: while (1) {
                 if ($buf =~ /$tagc/o) {
                     $attr = $`;  $tmp = $';
-                    if (!_open_lit($attr)) {
+                    if (!&SGMLopen_lit($attr)) {
 	                $buf = $tmp;
                         last STAG;
                     }
@@ -431,27 +432,6 @@ sub _errMsg {
 ##**********************************************************************##
 ##	PRIVATE PACKAGE ROUTINES
 ##**********************************************************************##
-
-##----------------------------------------------------------------------
-##	_open_lit() returns true if string has a literal that is not
-##	closed.  Else it returns false.
-##
-sub _open_lit {
-    my $str = $_[0];
-    my($q, $after);
-
-    while ($str =~ /([$quotes])/o) {
-	$q = $1;
-	$after = $';
-	if (($q eq $lit_ ? ($after =~ /($lit)/o) :
-			   ($after =~ /($lita)/o)) ) {
-	    $str = $';
-	} else {
-	    return 1;
-	}
-    }
-    0;
-}
 
 ##----------------------------------------------------------------------
 1;
