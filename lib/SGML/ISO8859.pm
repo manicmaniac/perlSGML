@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##	%Z% $Id: ISO8859.pm,v 1.1 1997/09/11 17:40:56 ehood Exp $  %Z%
+##	%Z% $Id: ISO8859.pm,v 1.2 1997/09/15 14:58:20 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -28,6 +28,8 @@ package SGML::ISO8859;
 
 use Exporter;
 @ISA = qw( Exporter );
+
+$VERSION = "0.01";
 
 @EXPORT_OK = qw(
     &str2sgml
@@ -167,142 +169,3 @@ sub sgml2str {
 ##---------------------------------------------------------------------------##
 1;
 
-__END__
-
-=head1 NAME
-
-SGML::ISO8859 - routines for handling ISO 8859 character sets
-
-=head1 SYNOPSIS
-
-  use SGML::ISO8859;
-
-  $sgml_str = SGML::ISO8859::str2sgml($data, $charset);
-  $data     = SGML::ISO8859::sgml2str($sgml_str, $charset);
-
-=head1 DESCRIPTION
-
-B<SGML::ISO8859> contains routines for handling ISO 8859 character
-data for SGML related processing.  The routines defined in the
-module can be specified during the B<use> operator to import the
-routines into the current name space.  For example:
-
-    use SGML::ISO8859 qw( &str2sgml &sgml2str );
-
-B<SGML::ISO8859> supports the following character sets:
-B<us-ascii>,
-B<iso-8859-1> (Latin-1),
-B<iso-8859-2> (Latin-2),
-B<iso-8859-3> (Latin-3),
-B<iso-8859-4> (Latin-4),
-B<iso-8859-5> (Cyrillic),
-B<iso-8859-6> (Arabic),
-B<iso-8859-7> (Greek),
-B<iso-8859-8> (Hebrew),
-B<iso-8859-9> (Latin-5),
-B<iso-8859-10> (Latin-6).
-
-The following routines are available in B<SGML::ISO8859>:
-
-=head2 str2sgml
-
-    $sgml_str =
-    str2sgml(
-	$data,
-	$charset
-    );
-
-B<str2sgml> converts a string so any special characters are
-converted to the appropriate entity references.  The characters
-'E<lt>', 'E<gt>', and 'E<amp>' will be converted also.
-
-B<Parameters:>
-
-=over 4
-
-=item I<$data>
-
-The scalar string to convert.
-
-=item I<$charset>
-
-The character set of the string.
-
-=back
-
-B<Return:>
-
-=over 4
-
-=item I<$sgml_str>
-
-String with all special characters translated to entity references.
-
-=back
-
-=head2 sgml2str
-
-    $data =
-    sgml2str(
-	$sgml_str,
-	$charset
-    );
-
-B<sgml2str> converts a string containing special character
-entity references into a "raw" string.
-
-B<Parameters:>
-
-=over 4
-
-=item I<$sgml_str>
-
-The scalar string to convert.
-
-=item I<$charset>
-
-The character set to convert string to.
-
-=back
-
-B<Return:>
-
-=over 4
-
-=item I<$data>
-
-The "raw" string.
-
-=back
-
-=head1 NOTES
-
-=over 4
-
-=item *
-
-The mappings that B<SGML::ISO8859> uses for conversion are
-defined by the B<SGML::ISO8859::S#> modules, where B<#> is
-the character set number.
-
-=item *
-
-The following character sets,
-B<iso-8859-6> (Arabic) and
-B<iso-8859-8> (Hebrew),
-do not have any official ISO SGML character entity sets.
-B<SGML::ISO8859> uses an unoffical set.  To see the mappings
-defined, see the B<SGML::ISO8859::S6> and B<SGML::ISO8859::S8>
-modules.
-
-=back
-
-=head1 SEE ALSO
-
-perl(1)
-
-=head1 AUTHOR
-
-Earl Hood, ehood@medusa.acs.uci.edu
-
-=cut

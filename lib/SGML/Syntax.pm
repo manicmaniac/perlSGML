@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Syntax.pm,v 1.4 1997/08/27 21:01:24 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Syntax.pm,v 1.5 1997/09/15 14:58:25 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -24,8 +24,6 @@
 ##---------------------------------------------------------------------------##
 
 package SGML::Syntax;
-
-use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK @EXPORT);
 
 use Exporter ();
 @ISA = qw(Exporter);

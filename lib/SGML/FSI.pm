@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: FSI.pm,v 1.4 1997/08/27 21:01:19 ehood Exp $  %Z%
+##      %Z% $Id: FSI.pm,v 1.5 1997/09/15 14:58:20 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -108,64 +108,3 @@ sub OpenSysId {
 ##----------------------------------------------------------------------
 1;
 
-__END__
-
-=head1 NAME
-
-SGML::FSI - SGML Formal System Indentifiers
-
-=head1 SYNOPSIS
-
-  use SGML::FSI;
-  $fh = OpenSysId($sysid, $base)
-
-=head1 DESCRIPTION
-
-The B<SGML::FSI> module handles Formal System Indentifiers.
-
-=head1 EXPORTED ROUTINES
-
-=over 4
-
-=item $fh = B<OpenSysId>(I<$sysid>, I<$base>)
-
-B<OpenSysId> opens a filehandle to I<$sysid>.  The I<$base> argument
-is used if I<$sysid> is a relative system identifier.
-
-=back
-
-=head1 NOTES
-
-=over 4
-
-=item *
-
-Currently, this module does not really support FSIs.  The module
-exists to provide a stable(?) interface to resolving sysids to perl
-filehandles.  Someday, FSI support will be added as time permits and
-decent documentation exists.
-
-=back
-
-=head1 ENVIRONMENT VARIABLES
-
-=over 4
-
-=item B<SGML_SEARCH_PATH>
-
-List of file system paths to look for system entities for relative
-system identifiers.
-
-=back
-
-=head1 SEE ALSO
-
-SGML::EntMan(3)
-
-perl(1)
-
-=head1 AUTHOR
-
-Earl Hood, ehood@medusa.acs.uci.edu
-
-=cut

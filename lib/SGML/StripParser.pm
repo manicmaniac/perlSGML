@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: StripParser.pm,v 1.1 1997/09/11 17:40:56 ehood Exp $  %Z%
+##      %Z% $Id: StripParser.pm,v 1.2 1997/09/15 14:58:24 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -28,6 +28,8 @@ package SGML::StripParser;
 
 use SGML::Parser;
 @ISA = qw( SGML::Parser );
+
+$VERSION = "0.01";
 
 use SGML::ISO8859 qw( &sgml2str );
 use SGML::Util;
@@ -385,98 +387,3 @@ BEGIN {
 ##---------------------------------------------------------------------------##
 1;
 
-__END__
-
-=head1 NAME
-
-SGML::StripParser - strip tags from an SGML instance
-
-=head1 SYNOPSIS
-
-  use SGML::StripParser;
-  $parser = new SGML::StripParser;
-  $parser->parse_data(\*STDIN);
-
-=head1 DESCRIPTION
-
-B<SGML::StripParser> strips SGML tags from document instances
-and translates entity references for special characters and
-character references to ASCII (or the character set specified by the
-B<set_charset> method).  The B<parse_data> method is used to specify
-the input filehandle of the SGML document instance.  By default,
-output will go to STDOUT, but the output filehandle can be changed
-by the B<set_outhandle> method.
-
-=head1 CLASS METHODS
-
-The following class methods are defined:
-
-=head2 B<new> SGML::StripParser
-
-Instantiate a new B<SGML::StripParser> object.
-
-=head1 OBJECT METHODS
-
-The following methods are defined:
-
-=head2 B<parse_data>(\*I<FILEHANDLE>)
-
-Process the document instance specified by I<FILEHANDLE>.
-
-=head2 B<parse_data>(\*I<FILEHANDLE>)
-
-Process the document instance specified by I<FILEHANDLE>.
-
-=head2 B<set_outhandle>(\*I<FILEHANDLE>)
-
-Set the output filehandle to I<FILEHANDLE>.
-
-=head2 B<set_html_mode>(I<$boolean>)
-
-If I<$boolean> is a true value, anchor URLs in HTML documents
-will be included in the output.
-
-=head2 B<set_charset>(I<$charset>)
-
-Use I<$charset> as the character set to use while processing.
-By default, ASCII is assumed, so entity references for special
-characters and character references are mapped to ASCII text.
-B<set_charset> allows the entity references and character references
-to interpreted under a different character set.  Only the ISO-8859
-character sets (1-10) are supported.
-
-=head2 B<set_inc_parm_ents>(I<@names>)
-
-Set the list of parameter entities in I<@names> to "C<INCLUDE>".
-This method may be useful for instances that have marked sections
-with parameter entity references for the status keyword.
-
-=head2 B<set_ign_parm_ents>(I<@names>)
-
-Set the list of parameter entities in I<@names> to "C<IGNORE>".
-This method may be useful for instances that have marked sections
-with parameter entity references for the status keyword.
-
-=head1 NOTES
-
-=over 4
-
-=item *
-
-B<SGML::StripParser> is derived from the B<SGML::Parser> class.
-Hence, it has the same parsing capbilities and limitation of the
-B<SGML::Parser> class.
-
-=back
-
-=head1 SEE ALSO
-
-SGML::ISO8859(3), SGML::Parser(3)
-
-perl(1)
-
-=head1 AUTHOR
-
-Earl Hood, ehood@medusa.acs.uci.edu
-
-=cut
