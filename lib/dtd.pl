@@ -1,6 +1,5 @@
-##---------------------------------------------------------------------------##
-##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.3 1996/10/01 15:36:00 ehood Exp $ %Z%
+##---------------------------------------------------------------------------## ##  File:
+##      %Z% %Y% $Id: dtd.pl,v 1.4 1996/10/04 16:11:13 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -1899,14 +1898,14 @@ $TREEFILE = 'STDOUT';	# Default output file
 ##
 sub main'DTDprint_tree {
     local($elem, $depth, $handle) = @_;
-    local(%inc, %exc, %done, %open);
+    local(%inc, %exc, %done, %open, @padlen);
     $MAXLEVEL = $depth if ($depth > 0);
     $TREEFILE = $handle if $handle;
-    &print_elem($elem, 1);
+    &print_elem($elem, 1, 1);
     $elem =~ tr/A-Z/a-z/;
     &compute_levels($elem, 1, *inc, *exc, *done); # Compute prune values
-    %inc = (); %exc = ();
-    &print_sub_tree($elem, 2, *inc, *exc, *done); # Print tree
+    %inc = (); %exc = (); @padlen = (0);
+    &print_sub_tree($elem, 2, *inc, *exc, *done, *padlen); # Print tree
 }
 
 ##---------------------------------------------------------------------------
@@ -1935,7 +1934,8 @@ sub compute_levels {
     @array = (@incarray, &extract_elem_names($ElemCont{$elem}));
     &remove_dups(*array);
     foreach (@array) {
-        next if &'DTDis_elem_keyword($_);
+	next unless &'DTDis_element($_);
+        # next if &'DTDis_elem_keyword($_);
         $done{$_} = $level+1, $notdone{$_} = 1
             if ($level+1 < $done{$_} || !$done{$_});
     }
@@ -1945,8 +1945,9 @@ sub compute_levels {
     foreach (@excarray) { $exc{$_}++; $lexc{$_} = 1; }
 
     ## Compute sub tree ##
-    foreach (sort @array) {
-        next if &'DTDis_elem_keyword($_);
+    foreach (@array) {
+	next unless &'DTDis_element($_);
+        # next if &'DTDis_elem_keyword($_);
         if (!$lexc{$_}) {
             &compute_levels($_, $level+1, *inc, *exc, *done),
                 $notdone{$_} = 0  if ($level < $MAXLEVEL &&
@@ -1965,66 +1966,143 @@ sub compute_levels {
 ##	%done array built by compute_levels() to perform pruning.
 ##
 sub print_sub_tree {
-    local($elem, $level, *inc, *exc, *done, *open) = @_;
-    local($tmp, $i, @array, @incarray, @excarray, %lexc);
+    local($elem, $level, *inc, *exc, *done, *open, *padlen) = @_;
+    local(%lexc, %linc, %pad, %elem2pr);
+    local(@array, @incarray, @excarray, @aincarray, @aexcarray);
+    local($tmp, $i, $item, $curelem, $prtxt, $hascontent, $key);
 
     return if $level > $MAXLEVEL;
     $done{$elem} = 0;	# Set done value so $elem tree is printed only once.
+    $key = 0;		# Key counter for mapping elements to printed
+			# element.  The gi cannot be used since a content
+			# model may contain duplicate elements.
+
+    ##	Get element contents
+    ##	    This block grabs the content model of the element and
+    ##	    creates a mapping of subelements to the printed copy.
+    ##	    Delimiters are preserved and indenting is done for
+    ##	    model groups.
+    @array = &extract_elem_names($ElemCont{$elem},1);
+    $hascontent = (scalar(@array) != 1);
+    if (scalar(@array) == 1) {
+	($tmp = $array[0]) =~ tr/a-z/A-Z/;
+	$elem2pr{$key++} = $tmp;
+    } else {
+	$curelem = ''; $open = 0; $prtxt = '';
+	foreach $item (@array) {
+	    if ($item eq $grpo_) {
+		if ($curelem) {
+		    $elem2pr{$tmp} = $prtxt;
+		    $curelem = '';
+		    $prtxt = ('_' x $open) . $item;
+		} else {
+		    $prtxt .= $item;
+		}
+		$open++;
+		next;
+	    }
+	    if ($item eq $grpc_) {
+		$open--;
+		$prtxt .= $item;
+		next;
+	    }
+	    if ($item eq $and_ || $item eq $or_ || $item eq $seq_) {
+		$prtxt .= " "  unless $item eq $seq_;
+		$prtxt .= $item;
+		$elem2pr{$tmp} = $prtxt;
+		$curelem = '';
+		$prtxt = '_' x $open;
+		next;
+	    }
+	    if ($item eq $opt_ || $item eq $plus_ || $item eq $rep_) {
+		$prtxt .= $item;
+		next;
+	    }
+	    $curelem = $item;
+	    $tmp = $key++;
+	    $pad{$tmp} = $open;		# Track padding for group indentation
+	    $item =~ tr/a-z/A-Z/
+		if ($item =~ /$rni/o) || !&'DTDis_element($curelem);
+	    $prtxt .= $item;
+	}
+	$elem2pr{$tmp} = $prtxt;
+    }
 
     ## List inclusion elements due to ancestors ##
-    @incarray = sort grep($inc{$_} > 0, sort keys %inc);
-    if ($#incarray >= 0 ) {
-        $tmp = '(Ia):';
-        foreach (@incarray) { $tmp .= ' ' . $_; }
-        &print_elem($tmp, $level, *open);
+    @aincarray = sort grep($inc{$_} > 0, sort keys %inc);
+    if (scalar(@aincarray) && $hascontent) {
+        $tmp = '{A+}';
+        foreach (@aincarray) { $tmp .= ' ' . $_; }
+        &print_elem($tmp, 0, $level, *open, *padlen);
     }
 
     ## List exclusion elements due to ancestors ##
-    @excarray = sort grep($exc{$_} > 0, sort keys %exc);
-    if ($#excarray >= 0 ) {
-        $tmp = '(Xa):';
-        foreach (@excarray) { $tmp .= ' ' . $_; }
-        &print_elem($tmp, $level, *open);
+    @aexcarray = sort grep($exc{$_} > 0, sort keys %exc);
+    if (scalar(@aexcarray) && $hascontent) {
+        $tmp = '{A-}';
+        foreach (@aexcarray) { $tmp .= ' ' . $_; }
+        &print_elem($tmp, 0, $level, *open, *padlen);
     }
 
     ## Get inclusion elements ##
     @incarray = sort &extract_elem_names($ElemInc{$elem});
-    $tmp = '(I):' if $#incarray >= 0;
-    foreach (@incarray) {
-        $inc{$_}++;
-        $tmp .= ' ' . $_;
+    if (scalar(@incarray)) {
+	$tmp = ' {+}';
+	foreach (@incarray) {
+	    $inc{$_}++;
+	    $linc{$_} = 1;
+	    $tmp .= ' ' . $_;
+	    $elem2pr{$key++} = $_;
+	}
+	&print_elem($tmp, 0, $level, *open, *padlen);
     }
-    &print_elem($tmp, $level, *open) if $#incarray >= 0;
-
-    ## Get element contents ##
-    @array = (@incarray, &extract_elem_names($ElemCont{$elem}));
-    &remove_dups(*array);
 
     ## Get exclusion elements ##
     @excarray = sort &extract_elem_names($ElemExc{$elem});
-    $tmp = '(X):' if $#excarray >= 0;
-    foreach (@excarray) {
-        $exc{$_}++; $lexc{$_} = 1;
-        $tmp .= ' ' . $_;
+    if (scalar(@excarray)) {
+	$tmp = ' {-}';
+	foreach (@excarray) {
+	    $exc{$_}++;
+	    $lexc{$_} = 1;
+	    $tmp .= ' ' . $_;
+	}
+	&print_elem($tmp, 0, $level, *open, *padlen);
     }
-    &print_elem($tmp, $level, *open) if $#excarray >= 0;
+    &print_elem('', 1, $level, *open, *padlen)
+	if $hascontent &&
+	   (scalar(@excarray) || scalar(@incarray) ||
+	    scalar(@aincarray) || scalar(@aexcarray));
 
-    &print_elem(' |', $level, *open);
-
-    ## Output sub tree ##
+    ## Output sub trees ##
+    local($prefix, $suffix);
+    @array = (&extract_elem_names($ElemCont{$elem}), @incarray);
     $i = 0;
-    foreach (sort @array) {
-        $open{$level} = ($i < $#array ? 1 : 0); $i++;
-        if (s/^\s*($elem_keywords)\s*$/\U$1/oi) {
-            &print_elem($_, $level, *open);
-        } elsif (!$lexc{$_}) {
-            &print_elem($_ . ($done{$_} < $level ? " ..." : ""),
-                        $level, *open);
-            &print_sub_tree($_, $level+1, *inc, *exc, *done, *open)
+    foreach (@array) {
+	$open{$level} = ($i < $#array ? 1 : 0);
+	$prefix = ''; $suffix = '';
+	if (&'DTDis_element($_)) {
+	    if ($lexc{$_}) {
+		$suffix .= " {-}";
+	    } elsif ($linc{$_}) {
+		$suffix .= " {+}";
+	    }
+	    if (!$lexc{$_} && ($done{$_} < $level)) {
+		$suffix .= " ...";
+	    }
+	}
+	&print_elem($prefix . $elem2pr{$i} . $suffix,
+		    1, $level, *open, *padlen);
+
+	push(@padlen, $pad{$i});
+        if (&'DTDis_element($_) && !$lexc{$_}) {
+            &print_sub_tree($_, $level+1, *inc, *exc, *done, *open, *padlen)
                 if ($level < $MAXLEVEL && $level == $done{$_});
         }
+	pop(@padlen);
+    } continue {
+	$i++;
     }
-    &print_elem("", $level, *open);
+    &print_elem("", 0, $level, *open);
 
     ## Remove include elements ##
     foreach (@incarray) { $inc{$_}--; }
@@ -2037,16 +2115,21 @@ sub print_sub_tree {
 ##	in a structured format to $TREEFILE.
 ##
 sub print_elem {
-    local($elem, $level, *open) = @_;
+    local($elem, $iselem, $level, *open, *padlen) = @_;
     local($i, $indent);
+
     if ($level == 1) {
 	print($TREEFILE $elem, "\n"); }
     else {
+	$indent .= " " x $padlen[0];
 	for ($i=2; $i < $level; $i++) {
-	    $indent .= ($open{$i} ? " | " : "   "); }
-	if ($elem ne "") {
-	    if ($elem =~ /\(/) { $indent .= " | "; }
-	    elsif ($elem !~ /\|/) { $indent .= " |_"; }
+	    $indent .= $open{$i} ? " | " : "   ";
+	    $indent .= " " x $padlen[$i-1];
+	}
+	if ($iselem) {
+	    $indent .= $elem ? " |_" : " | "; 
+	} elsif ($elem ne "") {
+	    $indent .= " | "; 
 	}
 	print($TREEFILE $indent, $elem, "\n");
     }
