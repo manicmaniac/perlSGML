@@ -1,10 +1,10 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: SOCat.pm,v 1.1 1996/11/13 15:29:08 ehood Exp $ %Z%
+##      %Z% %Y% $Id: SOCat.pm,v 1.2 1996/11/14 09:31:18 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
-##      This file defines the SOCat class.
+##      This file defines the SGML::SOCat class.
 ##---------------------------------------------------------------------------##
 ##  Copyright (C) 1996  Earl Hood, ehood@medusa.acs.uci.edu
 ##
@@ -23,7 +23,7 @@
 ##  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ##---------------------------------------------------------------------------##
 
-package SOCat;
+package SGML::SOCat;
 
 use Exporter ();
 @EXPORT = ();
@@ -31,7 +31,7 @@ $VERSION = 0.01;
 
 BEGIN {
 
-    @SGML_SEARCH_PATH = ();	# List of paths to find sysids
+    # @SGML_SEARCH_PATH = ();	# List of paths to find sysids
     $MaxErrs	= 10;		# Max number of errors before aborting
 
     $com	= q/--/;	# Comment delimiter
@@ -84,20 +84,20 @@ sub new {
 }
 
 ##----------------------------------------------------------------------
-sub read_file {
+sub read_catalog {
     my $this = shift;
     my $fname = shift;
     my $handle = "CAT" . $_hcnt++;
 
     if (open($handle, $fname)) {
-	$this->read_handle(\*$handle, $fname);
+	$this->read_catalog_handle(\*$handle, $fname);
     } else {
 	$this->_errMsg("Unable to open $fname");
     }
 }
 
 ##----------------------------------------------------------------------
-sub read_handle {
+sub read_catalog_handle {
     my $this  = shift;
     my ($fh, $fname) = @_;
 
@@ -179,7 +179,7 @@ sub read_handle {
 		    last SW;
 		}
 		if ($token eq 'CATALOG') {
-		    $this->read_file($args[0]);
+		    $this->read_catalog($args[0]);
 		    last SW;
 		}
 		$this->_errMsg("Internal Error\n");
