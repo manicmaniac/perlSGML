@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: stripsgml,v 1.1 1996/09/30 13:21:10 ehood Exp $ %Z%
+##      %Z% %Y% $Id: stripsgml,v 1.2 1996/09/30 13:40:14 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -43,7 +43,7 @@ $VERSION = "1.0.0";
 
 ## Require libraries ##
 unshift(@INC, 'lib');
-require "tmp.pl" || die "Unable to require sgml.pl\n";
+require "sgml.pl" || die "Unable to require sgml.pl\n";
 
 ##---------------------------------------------------------------------------##
 ## Associative array for entity substitutions
