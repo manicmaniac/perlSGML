@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: stripsgml.sgml,v 1.2 1996/10/07 15:42:28 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: stripsgml.sgml,v 1.3 1997/09/12 20:13:17 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -9,7 +9,7 @@
 ]>
 <html>
 <head>
-<title>stripsgml 1.0.0</title>
+<title>stripsgml 2.0.0</title>
 </head>
 <body>
 
@@ -24,16 +24,22 @@
 <hr>
 <h2><a name="description">Description</a></h2>
 
-<p><code>stripsgml</code> removes SGML markup tags from a file.
-<code>stripsgml</code> also
-attempts to translate standard character entity references to ASCII.
+<p><strong>stripsgml</strong> removes SGML markup tags from a file.
+<strong>stripsgml</strong> also
+attempts to translate standard special character entity references to
+ASCII (or the character set specified by the
+<a href="-charset"><strong>-charset</strong></a> option).
+</p>
+
+<p><strong>stripsgml</strong> cannot handle document type
+declarations.  It only can handle document instances.
 </p>
 
 <!-- =================================================================== -->
 <hr>
 <h2><a name="usage">Usage</a></h2>
 
-<p><code>stripsgml</code> is invoked from the Unix shell as follows:
+<p><strong>stripsgml</strong> is invoked from the Unix shell as follows:
 </p>
 
 <p><tt>% stripsgml </tt><var>[options]</var><tt> &lt;
@@ -45,6 +51,17 @@ attempts to translate standard character entity references to ASCII.
 
 <dl>
 
+<dt><a name="-charset"><code>-charset</code> <var>charset</var></a></dt>
+<dd>
+<p>Use <var>charset</var> as the character set to use while processing.
+By default, ASCII is assumed, so entity references for special
+characters and character references are mapped to ASCII text.
+<strong>set_charset</strong> allows the entity references and character
+references to interpreted under a different character set.  Only the
+ISO-8859 character sets (1-10) are supported.
+</p>
+</dd>
+
 <dt><a name="-help"><code>-help</code></a></dt>
 <dd><p>Print out a terse description of all options available.
 </p>
@@ -55,6 +72,30 @@ attempts to translate standard character entity references to ASCII.
 preserved in the output.</p>
 </dd>
 
+<dt><a name="-ignore"><code>-ignore</code> <var>name</var></a></dt>
+<dd>
+<p>Set parameter entity with the name, <var>name</var>,
+to "<tt>IGNORE</tt>".  This option may be useful if the input
+data contains marked sections where parameter entity references
+are used to control the status keyword.
+</p>
+<p>This option can be specified multiple times to set multiple
+parameter entities.
+</p>
+</dd>
+
+<dt><a name="-include"><code>-include</code> <var>name</var></a></dt>
+<dd>
+<p>Set parameter entity with the name, <var>name</var>,
+to "<tt>INCLUDE</tt>".  This option may be useful if the input
+data contains marked sections where parameter entity references
+are used to control the status keyword.
+</p>
+<p>This option can be specified multiple times to set multiple
+parameter entities.
+</p>
+</dd>
+
 </dl>
 
 <!-- =================================================================== -->
@@ -63,5 +104,8 @@ preserved in the output.</p>
 
 <!-- =================================================================== -->
 <hr>
+<address>
+$Date: 1997/09/12 20:13:17 $ 
+</address>
 </body>
 </html>
