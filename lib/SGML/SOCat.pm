@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: SOCat.pm,v 1.3 1996/11/19 13:56:36 ehood Exp $ %Z%
+##      %Z% %Y% $Id: SOCat.pm,v 1.4 1996/11/20 08:02:59 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -43,6 +43,8 @@
 package SGML::SOCat;
 
 use Exporter ();
+@ISA = qw( Exporter );
+
 @EXPORT = ();
 $VERSION = "0.01";
 
@@ -118,7 +120,7 @@ sub read_file {
 }
 
 ##----------------------------------------------------------------------
-##	read_hadnle() reads the catalog designated by the filehandle
+##	read_handle() reads the catalog designated by the filehandle
 ##	passed in.  A 1 is returned on success, and a 0 on failure.
 ##	A reference to a filehandle should passed in to avoid problems
 ##	with package scoping.
