@@ -1,8 +1,9 @@
-<!--	%Z% %Y% $Id: perlSGML.ent,v 1.1 1996/09/30 16:37:58 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: perlSGML.ent,v 1.2 1996/10/05 14:06:28 ehood Exp $ %Z%
   -->
 
 <!entity author  public "-//EWH//TEXT Author (HTML)//EN">
 <!entity avail   public "-//EWH//TEXT Availability (HTML)//EN">
 <!entity catalog public "-//EWH//TEXT Catalog Description (HTML)//EN">
 <!entity catopt  public "-//EWH//TEXT Catalog CL Option (HTML)//EN">
+<!entity tree	 public "-//EWH//TEXT Tree Description (HTML)//EN">
 
