@@ -1,5 +1,5 @@
 ##---------------------------------------------------------------------------## ##  File:
-##      %Z% %Y% $Id: dtd.pl,v 1.7 1996/12/04 15:28:48 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd.pl,v 1.8 1996/12/26 15:20:58 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Contributors:
@@ -86,7 +86,7 @@
 
 package dtd;
 
-$VERSION = "2.4.0";
+$VERSION = "2.4.1";
 
 ##***************************************************************************##
 ##			       GLOBAL VARIABLES				     ##
@@ -1344,9 +1344,9 @@ sub do_attlist {
     ##	Create mapping of attribute name to element
     foreach (keys %attr) {
 	if ($ElemsOfAttr{$_}) {
-	    $ElemsOfAttr{$_} .= $; . $_;
+	    $ElemsOfAttr{$_} .= $; . join($;, @names);
 	} else {
-	    $ElemsOfAttr{$_}  = $_;
+	    $ElemsOfAttr{$_}  = join($;, @names);
 	}
     }
 }
