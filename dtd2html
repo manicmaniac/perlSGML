@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtd2html,v 1.4 1996/10/07 14:26:29 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd2html,v 1.5 1996/10/07 16:45:06 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -106,7 +106,7 @@ sub get_cli_opts {
     &usage() unless
     &NGetOpt(
 
-	"allname=s",	# Name of all element list page
+	"allfile=s",	# Name of all element list page
 	"catalog=s",	# Entity map file
 	"contnosort",	# Base content list is in order of model declaration
 	"descfile=s",	# Element description file
@@ -175,6 +175,7 @@ sub get_cli_opts {
     $LEVEL    = $opt_level	|| 15;
     $TREETOP  = $opt_treetop	|| "";
     $QHb      = $opt_qrefhtag	|| "H2";
+	$QHb  =~ s/[<>]//g;
 	$QHb  =~ tr/a-z/A-Z/;
 	$QHe  = "</$QHb>";  $QHb = "<$QHb>";
 	$QREF = 1 if $opt_qrefhtag;

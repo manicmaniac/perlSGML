@@ -1,5 +1,5 @@
 <!-- =================================================================== -->
-<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.3 1996/10/07 11:31:07 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: dtd2html.sgml,v 1.4 1996/10/07 16:47:31 ehood Exp $ %Z%
   -->
 <!-- =================================================================== -->
 
@@ -318,7 +318,7 @@ option is specified.
 </p>
 </dd>
 
-<dt><a name="-topname"><code>-topname</code> <var>filename</var></a></dt>
+<dt><a name="-topfile"><code>-topfile</code> <var>filename</var></a></dt>
 <dd><p>Set the filename for file listing the top-most elements in the
 DTD to <var>filename</var>. The default name is
 "<code>TOP-ELEM.html</code>".

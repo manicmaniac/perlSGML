@@ -13,6 +13,12 @@ affect dtd2html.
         o Tree file output changed where content model information
 	  is preserved.
 
+    Bug Fixes
+
+	o -allfile now works.  -allname was still being used.
+
+	o Fixed doc where -topname should -topfile.
+
 ==============================================================================
 1.5.0	(Aug 21, 1996)
 
