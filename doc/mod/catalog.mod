@@ -1,6 +1,6 @@
-<!--	%Z% %Y% $Id: catalog.mod,v 1.3 1996/10/07 11:36:57 ehood Exp $ %Z%
+<!--	%Z% %Y% $Id: catalog.mod,v 1.4 1996/10/07 11:39:29 ehood Exp $ %Z%
   -->
-<h4>Catalog Syntax</h4>
+<p><strong>Catalog Syntax</strong></p>
 
 <p>The syntax of a catalog is a subset of SGML catalogs
 (as defined in
@@ -27,7 +27,7 @@
 </dd>
 </dl>
 
-<h5>Syntax Notes</h5>
+<p><strong>Syntax Notes</strong></p>
 
 <ul>
 <li><p>A <var>system_id</var> string cannot contain any spaces.  The
@@ -60,7 +60,7 @@ ENTITY "%html-1"                                                  html-1.dtd
 
 </pre>
 
-<h4>Environment Variables</h4>
+<p><strong>Environment Variables</strong></p>
 
 <p>The following
 envariables (ie. environment variables) are supported:
