@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: EntMan.pm,v 1.1 1996/12/02 11:03:31 ehood Exp $ %Z%
+##      %Z% %Y% $Id: EntMan.pm,v 1.2 1996/12/02 11:22:39 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -220,26 +220,26 @@ sub get_public {
 
     BLK: {
 	## Check for public entry in Catalog
-	($sysid, $base, $o) = $this->{Catalog}->get_public($in_public);
+	($sysid, $base, $o) = $this->{Catalog}->get_public($in_pubid);
 	last BLK  if $sysid;
 
 	## Check if delegating
-	($sysid, $base) = $this->{Catalog}->get_delegate($in_public);
+	($sysid, $base) = $this->{Catalog}->get_delegate($in_pubid);
 	if ($sysid) {
 	    ($sysid, $base, $o) =
-		$this->resolve_delegate($sysid, $base, $in_public);
+		$this->resolve_delegate($sysid, $base, $in_pubid);
 		last BLK;
 	}
 
 	## Check for public entry in environment catalog(s)
-	($sysid, $base, $o) = $EnvCat->get_public($in_public);
+	($sysid, $base, $o) = $EnvCat->get_public($in_pubid);
 	last BLK  if $sysid;
 
 	## Check if delegating from environment catalog(s)
-	($sysid, $base) = $EnvCat->get_delegate($in_public);
+	($sysid, $base) = $EnvCat->get_delegate($in_pubid);
 	if ($sysid) {
 	    ($sysid, $base, $o) =
-		$this->resolve_delegate($sysid, $base, $in_public);
+		$this->resolve_delegate($sysid, $base, $in_pubid);
 		last BLK;
 	}
 
