@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------
 ##  File:
-##	%Z% %Y% $Id: sgml.pl,v 1.2 1996/09/30 13:14:43 ehood Exp $ %Z%
+##	%Z% %Y% $Id: sgml.pl,v 1.3 1996/09/30 15:17:54 ehood Exp $ %Z%
 ##  Author:
 ##	Earl Hood, ehood@medusa.acs.uci.edu
 ##---------------------------------------------------------------------------
@@ -34,6 +34,7 @@
     $CommentFunc	= '';
     $CdataFunc   	= '';
     $OpenTagFunc   	= '';
+    $ProcInsFunc	= '';
 }
 
 ##---------------------------------------------------------------------------
@@ -43,6 +44,8 @@
 ##	    o	An open tag:	&$OpenTagFunc($gi, $attribute_list)
 ##	    o	An end tag:	&$EndTagFunc($gi)
 ##	    o	A comment:	&$CommentFunc(*comment_text);
+##	    o	Processing instruction:
+##				&$ProcInsFunc(*pi_text);
 ##	    o	Character data: &$CdataFunc(*cdata);
 ##
 ##	Argument descriptions:
@@ -106,6 +109,14 @@ sub SGMLread_sgml {
 		chop $txt;
 		&$DeclFunc(*txt)  if defined (&$DeclFunc);
 	    }
+	    next PSGML;
+	}
+
+	if ($char eq '?') {			## Processing instruction
+	    $/ = ">";
+	    $txt = <$handle>;
+	    chop $txt;
+	    &$ProcInsFunc(*txt)  if defined (&$ProcInsFunc);
 	    next PSGML;
 	}
 
