@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Syntax.pm,v 1.2 1996/12/04 15:47:13 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Syntax.pm,v 1.3 1996/12/18 10:49:46 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -29,6 +29,7 @@ use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK @EXPORT);
 
 use Exporter ();
 @ISA = qw(Exporter);
+$VERSION = "0.02";
 
 %EXPORT_TAGS = (
     Delims	=> [
@@ -37,6 +38,7 @@ use Exporter ();
 	    $stago $stago_ $etago $etago_ $tagc $tagc_
 	    $msc $msc_
 	    $rni $rni_
+	    $vi $vi_
 	    $ero $ero_ $pero $pero_ $cro $cro_ $refc $refc_
 	    $dso $dso_ $dsc $dsc_
 	    $comm $comm_ $como $como_ $comc $comc_ $comchar
@@ -70,7 +72,6 @@ use Exporter ();
 
 @EXPORT = ();
 @EXPORT_OK = ();
-$VERSION = "0.01";
 
 Exporter::export_ok_tags('Delims');
 Exporter::export_ok_tags('Keywords');
@@ -163,6 +164,9 @@ $etago	= '</';		# End tag open
 $etago_	= '</';
 $tagc	= '>';		# Tag close
 $tagc_	= '>';
+
+$vi	= '=';		# Value indicator
+$vi_	= '=';
 
 $msc	= '\]\]';	# Marked section close
 $msc_	= ']]';
