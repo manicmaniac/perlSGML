@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Util.pm,v 1.3 1996/12/18 11:01:15 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Util.pm,v 1.4 1996/12/18 11:13:14 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -176,6 +176,10 @@ sub SGMLattr_to_sgml {
 	   push(@a, $_, $ref->{$_});
 	}
 	$ref = \@a;
+
+    ## If already an array, copy it
+    } else {
+	$ref = [ @$ref ];
     }
 
     while (@$ref) {
