@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: FSI.pm,v 1.2 1996/12/02 11:28:27 ehood Exp $ %Z%
+##      %Z% $Id: FSI.pm,v 1.3 1997/01/09 13:22:47 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -44,26 +44,25 @@
 
 package SGML::FSI;
 
+use vars qw(@ISA @EXPORT $VERSION @SGML_SEARCH_PATH $PATHSEP);
+
 use Exporter ();
 @ISA = qw( Exporter );
 
 @EXPORT = qw( &OpenSysId );
 
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 use FileHandle;
 use OSUtil;
 
-BEGIN {
+## Grab environment variables
 
-    ## Grab environment variables
+# SGML_SEARCH_PATH defines a list of paths for searching
+# for relative file sysids.
 
-    # SGML_SEARCH_PATH defines a list of paths for searching
-    # for relative file sysids.
-
-    @SGML_SEARCH_PATH = (split(/$PATHSEP/o, $ENV{P_SGML_PATH}),
-			 split(/$PATHSEP/o, $ENV{SGML_SEARCH_PATH}));
-}
+@SGML_SEARCH_PATH = (split(/$PATHSEP/o, $ENV{P_SGML_PATH}),
+		     split(/$PATHSEP/o, $ENV{SGML_SEARCH_PATH}));
 
 ##**********************************************************************##
 ##	PUBLIC ROUTINES
