@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: Util.pm,v 1.2 1996/12/17 14:50:40 ehood Exp $ %Z%
+##      %Z% %Y% $Id: Util.pm,v 1.3 1996/12/18 11:01:15 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -37,10 +37,11 @@ use Exporter ();
 %EXPORT_TAGS = (
     Routines => [
 	qw( &SGMLparse_attr_spec
+	    &SGMLattr_to_sgml
 	  )
     ],
 );
-$VERSION = "0.01";
+$VERSION = "0.02";
 
 Exporter::export_tags('Routines');
 
@@ -90,7 +91,7 @@ sub SGMLparse_attr_spec {
     LOOP: while (1) {
 
 	## Check for name=value specification
-	while ($str =~ /^([^=\s]+)\s*=\s*/) {
+	while ($str =~ /^([^$vi\s]+)\s*$vi\s*/o) {
 	    $var = lc $1;
 	    $str = $';
 	    if ($str =~ s/^([$quotes])//) {
@@ -120,14 +121,14 @@ sub SGMLparse_attr_spec {
 	    if (!($q eq $lit_ ? $str =~ s/^([^$lit]*)$lit//o :
 				$str =~ s/^([^$lita]*)$lita//o)) {
 		warn "Warning: Unclosed literal in: $spec\n";
-		push(@ret, $rni_ . $n++, $str);
+		push(@ret, sprintf("$rni_%05d", $n++), $str);
 		last LOOP;
 	    }
-	    push(@ret, $rni_ . $n++, $1);
+	    push(@ret, sprintf("$rni_%05d", $n++), $1);
 	    next LOOP;
 	}
 	if ($str =~ s/^(\S+)\s*//o) {		# Name value
-	    push(@ret, $rni_ . $n++, $1);
+	    push(@ret, sprintf("$rni_%05d", $n++), $1);
 	    next LOOP;
 	}
 
@@ -142,5 +143,54 @@ sub SGMLparse_attr_spec {
     @ret;
 }
 
+##---------------------------------------------------------------------------##
+##	SGMLattr_to_sgml is the inverse operation of SGMLparse_attr_spec.
+##	It takes a attribute structure and generates the SGML markup
+##	representation.
+##
+##	Parameters:
+##	    $	: A reference to a hash or an array.  If a hash, the
+##		  keys represent the names and the values the attribute
+##		  values.  If an array, the array is interpreted as
+##		  a sequence of name/value pairs.
+##
+##	Return:
+##	    $	: A string containing the SGML representation of the
+##		  attributes.
+##
+##	Notes:
+##	    o	Attribute names starting with the reserved name indicator
+##		('#' in the reference concrete syntax) are skipped with
+##		only their values printend.  This is to handle the case
+##		when SHORTTAG is YES.
+##
+sub SGMLattr_to_sgml {
+    my $ref = shift;
+    my $str = '';
+    my $name, $value, $q;
+
+    ## If reference to hash, change to an array
+    if (ref($ref) eq 'HASH') {
+	my @a;
+	foreach (sort keys %$ref) {	# Should we sort?
+	   push(@a, $_, $ref->{$_});
+	}
+	$ref = \@a;
+    }
+
+    while (@$ref) {
+	$name = shift @$ref;
+	$value = shift @$ref;
+	if ($name !~ /$rni/o) {		# Check if printable name
+	    $str .= "$name$vi_";
+	    $q = ($value =~ /$lit/o) ? $lita_ : $lit_;
+	} else {			# Naked values are not quoted
+	    $q = '';
+	}
+	$str .= "$q$value$q ";
+    }
+    chop $str;	# remove added space
+    $str;
+}
 ##---------------------------------------------------------------------------##
 1;
