@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: DTD.pm,v 1.1 1996/11/12 08:49:07 ehood Exp $ %Z%
+##      %Z% %Y% $Id: DTD.pm,v 1.2 1996/11/13 15:28:21 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -361,13 +361,23 @@ $dirsep  = $ENV{'COMSPEC'} ? '\\' : '/';
 ##---------------------------------------------------------------------------##
 ##			 	CONSTRUCTOR				     ##
 ##---------------------------------------------------------------------------##
-
+##	new() is the constructor routine for class DTD.  The constructor
+##	may take a filehandle as an argument for a DTD to parse.  If
+##	the parse fails, new() will return undef.
+##
 sub new {
     my $this = {};
     my $class = shift;
     bless $this, $class;
     $this->reset();
-    $this;
+
+    ## Check if filehandle passed during construction
+    my $fh = shift;
+    my $status = 1;
+    if ($fh) {
+	$status = $this->read_dtd($fh);
+    }
+    $status ? $this : undef;
 }
 
 ##---------------------------------------------------------------------------##
