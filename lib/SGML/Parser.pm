@@ -1,6 +1,6 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% $Id: Parser.pm,v 1.9 1997/08/27 21:01:21 ehood Exp $  %Z%
+##      %Z% $Id: Parser.pm,v 1.10 1997/08/28 18:03:21 ehood Exp $  %Z%
 ##  Author:
 ##      Earl Hood			ehood@medusa.acs.uci.edu
 ##  Description:
@@ -186,7 +186,7 @@ sub parse_data {
 	    if ($buf eq '') {
 		last LOOP  unless defined($buf = $this->_get_line());
 	    }
-	    
+
 	    #--------------------------------------------------------------
 	    # Check for markup.  Choose match that occurs earliest in
 	    # string.
@@ -267,13 +267,13 @@ sub parse_data {
 		$name = $m1;
 	
 		if ($name eq '#') {	# Character reference
-		    if ($buf =~ s/^([$namechars]+);?\s*//o) {
+		    if ($buf =~ s/^([$namechars]+);?//o) {
 			$name = $1;
 		    }
 		    $this->char_ref($name);
 
 		} else {		# General entity reference
-		    if ($buf =~ s/^([$namechars]*);?\s*//o) {
+		    if ($buf =~ s/^([$namechars]*);?//o) {
 			$name .= $1;
 		    }
 		    $buf = $this->entity_ref($name) . $buf;
