@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtd2html,v 1.1 1996/09/30 13:21:08 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtd2html,v 1.2 1996/10/04 19:32:11 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -33,7 +33,7 @@ package main;
 ## Store name of program ##
 ($PROG = $0) =~ s%.*(/|\\|:)%%;
 
-$VERSION = "1.5.0";
+$VERSION = "1.6.0";
 
 $HomeDesc = "-home-";
 $EntsDesc = "-ents-";
@@ -57,44 +57,9 @@ $CDATA = $dtd'CDATA;
 $EMPTY = $dtd'EMPTY;
 $FIXED = $dtd'FIXED;
 $NOTATION = $dtd'NOTATION;
-##
-## Replace dtd'print_elem routine to spit out HTML.
-## This requires intimate knowledge of how dtd.pl calls print_elem().
-##
-$sub_print_elem =<<'EndOfSub';
-package dtd;
-sub print_elem {
-    local($elem, $level, *open) = @_;
-    local($i, $indent, $base);
-    if ($level == 1) {
-	local($tmp) = ($elem);
-	$tmp =~ tr/A-Z/a-z/;
-	print($TREEFILE qq|<A NAME="$tmp" HREF="$tmp.html">|,
-			qq|<STRONG>$elem</STRONG></A>\n|);
-    } else {
-	for ($i=2; $i < $level; $i++) {
-	    $indent .= ($open{$i} ? " | " : "   "); }
-	if ($elem ne "") {
-	    if ($elem =~ /\(/) {
-		$indent .= " | ";
-	    } elsif ($elem !~ /\|/) {
-		$indent .= " |_";
-		if (!&'DTDis_elem_keyword($elem)) {
-		    $elem  =~ /^(\S+)(.*)$/;
-		    if ($2) {
-			$elem = qq|<A HREF="#$1">$1</A>$2|;
-		    } else {
-			$elem = qq|<A NAME="$1" HREF="$1.html">| .
-				qq|<STRONG>$1</STRONG></A>|;
-		    }
-		}
-	    }
-	}
-	print($TREEFILE $indent, $elem, "\n");
-    }
-}
-EndOfSub
-eval $sub_print_elem;
+
+## Register tree callback to htmlize entries
+&'DTDset_tree_callback("main'htmlize_tree_entry");
 
 ##---------------------------------------------------------------------------##
 			    ##------------##
@@ -991,6 +956,35 @@ sub write_qref {
     print STDOUT "</DL>\n"  if $QREFDL;
     &print_end(STDOUT);
 }
+
+##---------------------------------------------------------------------------##
+sub htmlize_tree_entry {
+    local($iselem, $str) = @_;
+    if ($iselem) {
+	if (($str =~ /\.\.\./) || ($str =~ /\{-\}/)) {
+	    $str =~ s%([0-9a-zA-Z\.\-]+)%&anchor_tree_entry(1,$1)%oe;
+	} else {
+	    $str =~ s%([0-9a-zA-Z\.\-]+)%&anchor_tree_entry(0,$1)%oe
+	}
+    }
+    $str;
+}
+
+##---------------------------------------------------------------------------##
+sub anchor_tree_entry {
+    local($rel, $elem) = @_;
+    local($ret) = ($elem);
+    if (&'DTDis_element($elem)) {
+	if ($rel) {
+	    $ret = qq%<A HREF="#$elem">$elem</A>%;
+	} else {
+	    $ret = qq%<A NAME="$elem" HREF="${elem}.html">% .
+		   qq%<STRONG>$elem</STRONG></A>%;
+	}
+    }
+    $ret;
+}
+
 ##---------------------------------------------------------------------------##
 sub htmlize {
     local($string) = shift;
@@ -999,6 +993,7 @@ sub htmlize {
     $string =~ s/>/\&gt;/g;
     $string;
 }
+
 ##---------------------------------------------------------------------------##
 sub usage {
     print STDOUT <<EndOfUsage;
