@@ -1,10 +1,10 @@
 ##---------------------------------------------------------------------------
 ##  File:
-##	%Z% %Y% $Id: sgml.pl,v 1.1 1996/09/30 13:13:26 ehood Exp $ %Z%
+##	%Z% %Y% $Id: sgml.pl,v 1.2 1996/09/30 13:14:43 ehood Exp $ %Z%
 ##  Author:
 ##	Earl Hood, ehood@medusa.acs.uci.edu
 ##---------------------------------------------------------------------------
-##  Copyright (C) 1994  Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1994-1996  Earl Hood, ehood@medusa.acs.uci.edu
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -21,67 +21,153 @@
 ##  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ##---------------------------------------------------------------------------##
 
-package sgml;
+{
+    package sgml;
 
-$VERSION = '0.1.0';
+    $VERSION = '1.0.0';
+
+    $namechars   	= '\w.-';
+
+    ##	Callback functions
+    $EndTagFunc   	= '';
+    $DeclFunc   	= '';
+    $CommentFunc	= '';
+    $CdataFunc   	= '';
+    $OpenTagFunc   	= '';
+}
 
 ##---------------------------------------------------------------------------
-##	SGMLread_sgml() reads SGML markup.  The *array_r is the returned
-##	array that contains tags separated from text.  I.e. read_sgml()
-##	splits the markup tags from text.  Each array item is either a
-##	markup tag or a text.  The order of tag/text items are the
-##	order they appear in the text.
+##	SGMLread_sgml() reads SGML markup.  A callback is called when
+##	the following occurs:
+##
+##	    o	An open tag:	&$OpenTagFunc($gi, $attribute_list)
+##	    o	An end tag:	&$EndTagFunc($gi)
+##	    o	A comment:	&$CommentFunc(*comment_text);
+##	    o	Character data: &$CdataFunc(*cdata);
 ##
 ##	Argument descriptions:
 ##	    $handle :	Filehandle containing the SGML instance.
-##	    *array_r :	Pointer to array variable to put splitted tag/text.
-##
-##	Usage:
-##	    After read_sgml() is called, one only needs to 'shift' thru
-##	    the items to read the SGML.  If the item begins with a
-##	    '<' it is a tag, else it is text.
 ##
 ##	Notes:
-##	    o	All comment declarations, '<!-- -->', are deleted.
-##
-##	Limitations:
 ##	    o	read_sgml() is not intended to parse a DTD, or an
-##		SGML delcaration statement, '<SGML ...>'.  It is
-##		designed to parse SGML instances.
-##	    o	Marked sections are not recognized.
-##	    o   Element with CDATA content can screw things up if they
-##		contain '<' or '>' characters.
-##	    o   Attributes with '<' or '>' characters will screw things
-##		up.
+##		SGML declaration statement, '<!SGML ...>'.  It is
+##		designed to parse SGML instances.  If a "<!" sequence
+##		is encountered (and not part of a comment declaration,
+##		read_sgml() tries to ignore the declaration.
 ##
-sub main'SGMLread_sgml {
-    local($handle, *array_r) = @_;
-    local($d) = $/;
-    local($txt, $tmp);
+##	    o	Marked sections are not recognized.
+##
+##	    o	The $CdataFunc may be called consective times for the
+##		a contiguous character data segment.
+##
+sub SGMLread_sgml {
+    package sgml;
 
-    $/ = 0777;		# Slurps entire file
-    $tmp = <$handle>;
+    local($handle) = shift;
+    local($data,
+	  $tmp,
+	  $char,
+	  $txt,
+	  $gi,
+	  $left,
+	  $oldhandle,
+	  $oldds);
 
-    ## Delete comment declarations ##
-    while ($tmp =~ s/^([^<]*<)//) {
-	$txt .= $1;
-	if ($tmp =~ s/^!--//) {	# Check if comment declaration
-	    chop $txt;
-	    while (1) {			# Keep stripping until end of comment
-		$tmp =~ s/^([^>]*>)//;
-		last if $1 =~ /--\s*>$/ || !$tmp;
+    $oldhandle = select($handle);
+    $oldds = $/;
+    $data = '';
+
+    PSGML: while (!eof($handle)) {
+	$txt = '';
+
+	$/ = "<";
+	$data = <$handle>;
+	$left = chop $data;
+	&$CdataFunc(*data)  if defined (&$CdataFunc);
+
+	$char = getc($handle);
+
+	if ($char eq '!') {			## Declaration
+	    $char = getc($handle);
+	    if ($char eq '-') {
+		$char = getc($handle);
+		while (1) {
+		    $/ = ">";
+		    $tmp = <$handle>;
+		    last if $tmp =~ s/--\s*>$//o;
+		    $txt .= $tmp;
+		}
+		$txt .= $tmp;
+		&$CommentFunc(*txt)  if defined (&$CommentFunc);
+
+	    } else {
+		$/ = ">";
+		$txt = <$handle>;
+		chop $txt;
+		&$DeclFunc(*txt)  if defined (&$DeclFunc);
 	    }
-	} else {		# Else skip to next '>'
-	    $tmp =~ s/^([^>]*>)//;  $txt .= $1;
+	    next PSGML;
 	}
-    }
-    $txt .= $tmp;
 
-    ## Split tags from text
-    @array_r = grep($_ ne '', split(/(<[^>]*>)/, $txt));
+	if ($char eq '/') {			## End tag
+	    $/ = ">";
+	    $txt = <$handle>;
+	    $txt =~ s/[^$namechars]//go;
+	    &$EndTagFunc($txt)  if defined (&$EndTagFunc);
+	    next PSGML;
+	}
 
-    ## Restore slurp var
-    $/ = $d;
+	if ($char =~ /[$namechars]/o) { 	## Open tag
+	    $gi = $char;
+	    while (($char = getc($handle)) =~ /[$namechars]/o) {
+		$gi .= $char;
+	    }
+	    if ($char ne '>') {
+		while (!eof($handle)) {
+		    $/ = ">";
+		    $txt .= <$handle>;
+		    last  if (&close_notin_lit($txt));
+		}
+		chop $txt;
+	    }
+	    &$OpenTagFunc($gi, $txt)  if defined (&$OpenTagFunc);
+	    next PSGML;
+	}
+
+	&$CdataFunc(*left)  if defined (&$CdataFunc);
+
+    }  ## End of parse loop
+
+    $/ = $oldds;
+    select($oldhandle);
 }
 
+##---------------------------------------------------------------------------##
+##	Private functions
+##---------------------------------------------------------------------------##
+
+package sgml;
+
+##----------------------------------------------------------------------
+##	Function to check if string has a literla that is open.
+##	The function returns 1 if it is not. Else it returns 0.
+##
+sub close_notin_lit {
+    local($str) = ($_[0]);
+    local($lit, $after);
+
+    while ($str =~ /(['"])/) {
+	$lit = $1;
+	$after = $';
+	if (($lit eq '"' ? ($after =~ /(")/) :
+			   ($after =~ /(')/)) ) {
+	    $str = $';
+	} else {
+	    return 0;
+	}
+    }
+    1;
+}
+
+##---------------------------------------------------------------------------##
 1;
