@@ -1,7 +1,7 @@
 #! /usr/local/bin/perl
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: dtdview,v 1.1 1996/09/30 13:21:09 ehood Exp $ %Z%
+##      %Z% %Y% $Id: dtdview,v 1.2 1996/10/06 20:12:17 ehood Exp $ %Z%
 ##  Author:
 ##      Earl Hood       ehood@medusa.acs.uci.edu
 ##  Description:
@@ -38,6 +38,7 @@ $VERSION = "0.5.0";
 unshift(@INC, 'lib');
 require "dtd.pl" || die "Unable to require dtd.pl\n";
 require "newgetopt.pl" || die "Unable to require newgetopt.pl\n";
+require "shellwords.pl" || die "Unable to require shellwords.pl\n";
 $uio'NoDate = 1;
 require "uio.pl" || die "Unable to require uio.pl\n";
 
@@ -579,8 +580,14 @@ sub cmd_top {
 ##----------------------------------------------------------------------
 sub cmd_tree {
     local($elem, $depth) = ($_[0], $_[1]);
-    $depth = 2  unless (($depth =~ /^\d+$/) && ($depth > 0));
 
+    if ($elem =~ /^\d+$/) {
+	$depth = $elem;
+	$elem = $CurElem;
+    } elsif (!$elem) {
+	$elem = $CurElem
+    }
+    $depth = 2  unless (($depth =~ /^\d+$/) && ($depth > 0));
     if ($elem = &check_elem($elem)) {
 	&mesg("");
 	&DTDprint_tree($elem, $depth, $OUTHANDLE);
@@ -885,7 +892,7 @@ sub set_prompt {
 sub get_command {
     local($cmdhandle) = ($_[0]);
     local($str, $tmp) = ('', '');
-    local(@args, @hits);
+    local(@args, @hits, @a);
     local($com, $outhandle, $eof) = ('', '', 0);
 
     while (1) {
@@ -899,15 +906,21 @@ sub get_command {
 	    chop $str;
 	}
 
+	# Grab command and its arguments
+	($com, @a) = &shellwords($str);
+	$com =~ tr/A-Z/a-z/;
+
 	# Grab any file/program redirection
-	$outhandle = '';
-	if ($str =~ s/\s*(\d?[>\|].*)$//) {
-	    $outhandle = $1;
+	while (@a) {
+	    $tmp = shift @a;
+	    if ($tmp =~ /^\d?[>\|][\d>]?$/) {
+		$outhandle = join('', $tmp, @a);
+		last;
+	    } else {
+		push(@args, $tmp);
+	    }
 	}
 
-	# Grab command and its arguments
-	($com, @args) = split(' ', $str);
-	$com =~ tr/A-Z/a-z/;
 
 	# If not explicit command name, look for substring matches
 	if (!$ComMap{$com}) {
