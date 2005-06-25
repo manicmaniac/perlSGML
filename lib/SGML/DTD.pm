@@ -1,13 +1,13 @@
 ##---------------------------------------------------------------------------##
 ##  File:
-##      %Z% %Y% $Id: DTD.pm,v 1.6 1997/09/15 14:58:18 ehood Exp $ %Z%
+##      $Id: DTD.pm,v 1.7 2005/06/25 16:49:22 ehood Exp $
 ##  Author:
-##      Earl Hood			ehood@medusa.acs.uci.edu
+##      Earl Hood			earl@earlhood.com
 ##  Description:
 ##      This file defines the SGML::DTD class.  Class is used for
 ##	parsing and analyzing DTDs.
 ##---------------------------------------------------------------------------##
-##  Copyright (C) 1996,1997	Earl Hood, ehood@medusa.acs.uci.edu
+##  Copyright (C) 1996,1997	Earl Hood, earl@earlhood.com
 ##
 ##  This program is free software; you can redistribute it and/or modify
 ##  it under the terms of the GNU General Public License as published by
@@ -1122,7 +1122,7 @@ sub expand_entities {
     my $this = shift;
     my($line) = @_;
 
-    while ($$line =~ /($pero|$ero|$cro)[$namechars]+$refc?/o) {
+    while ($$line =~ /(?:$pero|$ero|$cro)[$namechars]+$refc?/o) {
 	$this->expand_parm_entities($line);
 	$this->expand_gen_entities($line);
 	&expand_char_entities($line);
